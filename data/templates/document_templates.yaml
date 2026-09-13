@@ -1,0 +1,62 @@
+rental:
+  name: "Residential Rental / Lease Agreement"
+  expected_clauses:
+    - payment_terms
+    - notice_period
+    - governing_law
+    - dispute_resolution
+    - termination
+    - maintenance
+    - security_deposit
+  description: "Standard residential lease agreement defining rent, security deposit, occupancy, and termination terms."
+
+employment:
+  name: "Executive Employment Agreement"
+  expected_clauses:
+    - payment_terms
+    - notice_period
+    - non_compete
+    - confidentiality
+    - ip_assignment
+    - governing_law
+    - termination
+    - dispute_resolution
+  description: "Employment agreement detailing compensation, duties, non-compete covenants, and IP assignment."
+
+saas_terms:
+  name: "SaaS Terms of Service"
+  expected_clauses:
+    - payment_terms
+    - limitation_of_liability
+    - indemnity
+    - auto_renewal
+    - confidentiality
+    - data_privacy
+    - force_majeure
+    - governing_law
+    - termination
+    - unilateral_amendment
+  description: "SaaS service agreement covering license grants, service levels, liability limits, and auto-renewals."
+
+nda:
+  name: "Non-Disclosure Agreement"
+  expected_clauses:
+    - confidentiality
+    - ip_assignment
+    - term
+    - governing_law
+    - dispute_resolution
+  description: "Mutual or one-way confidentiality agreement protecting proprietary information."
+
+service_agreement:
+  name: "Master Services Agreement"
+  expected_clauses:
+    - payment_terms
+    - limitation_of_liability
+    - indemnity
+    - confidentiality
+    - ip_assignment
+    - governing_law
+    - termination
+    - force_majeure
+  description: "B2B commercial services agreement covering deliverables, warranties, and liability."

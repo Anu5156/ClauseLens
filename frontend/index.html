@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClauseLens — Advanced Legal Document Intelligence Engine</title>
+  <meta name="description" content="Hierarchical clause tree analysis, cross-reference graphs, perspective risk modeling, and grounded QA for legal documents.">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Executive Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon">⚖️</div>
+        <div>
+          <span class="brand-title">ClauseLens</span>
+          <span class="brand-tag">Intelligence Studio</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="selector-group">
+          <span class="selector-label">Active Document:</span>
+          <select id="docSelector" class="doc-select">
+            <option value="">Loading contracts...</option>
+          </select>
+        </div>
+
+        <button id="btnOpenUpload" class="btn-primary">
+          <span>+</span> Upload Contract
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="app-tabs">
+      <button class="tab-btn active" data-tab="structure">
+        <span>📄</span> Structure & Tree
+      </button>
+      <button class="tab-btn" data-tab="risk">
+        <span>🛡️</span> Perspective Risk
+      </button>
+      <button class="tab-btn" data-tab="qa">
+        <span>💬</span> Grounded QA Studio
+      </button>
+      <button class="tab-btn" data-tab="compare">
+        <span>⚖️</span> Semantic Diff
+      </button>
+      <button class="tab-btn" data-tab="actionable">
+        <span>⚡</span> Actionable Hub
+      </button>
+    </nav>
+
+    <!-- Main Dynamic Content -->
+    <main class="app-content">
+      <!-- Top Stat Bar -->
+      <section class="profile-banner">
+        <div class="stat-card">
+          <div class="stat-icon">📄</div>
+          <div class="stat-data">
+            <span class="stat-label">Doc Classification</span>
+            <span id="statDocType" class="stat-value">-</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌳</div>
+          <div class="stat-data">
+            <span class="stat-label">Total Clauses</span>
+            <span id="statClauseCount" class="stat-value">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔗</div>
+          <div class="stat-data">
+            <span class="stat-label">Cross-References</span>
+            <span id="statCrossrefCount" class="stat-value">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-data">
+            <span class="stat-label">Detected Flaws</span>
+            <span id="statDefectCount" class="stat-value" style="color: var(--status-danger);">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 1: STRUCTURE & CLAUSE TREE
+           ========================================================================= -->
+      <div id="pane-structure" class="tab-pane active">
+        <!-- Missing Clause Template Audit -->
+        <div class="glass-card" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h2 class="card-title"><span>📋</span> Standard Contract Template Compliance Profile</h2>
+            <span id="profileStatusBadge" class="badge badge-info">Auditing...</span>
+          </div>
+          <div id="missingClauseAuditContent" style="font-size: 0.88rem; color: var(--text-secondary);">
+            Loading template taxonomy checks...
+          </div>
+        </div>
+
+        <div class="layout-split">
+          <!-- Left: Clause Hierarchy Tree -->
+          <div class="glass-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>🌳</span> Hierarchical Clause Tree</h2>
+              <span class="badge badge-info" id="treeClauseTotal">0 Clauses</span>
+            </div>
+            <div id="clauseTreeContainer" class="tree-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Inconsistencies & Definitions -->
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Defects Card -->
+            <div class="glass-card">
+              <div class="card-header">
+                <h2 class="card-title"><span>⚠️</span> Structural Defects & Dangling References</h2>
+                <span class="badge badge-danger" id="defectCountBadge">0 Caught</span>
+              </div>
+              <div id="defectsList" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto;">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Definitions Card -->
+            <div class="glass-card">
+              <div class="card-header">
+                <h2 class="card-title"><span>📖</span> Defined Terms Registry</h2>
+                <span class="badge badge-info" id="definitionCountBadge">0 Terms</span>
+              </div>
+              <div id="definitionsList" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 280px; overflow-y: auto;">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================================
+           TAB 2: PERSPECTIVE RISK ANALYZER
+           ========================================================================= -->
+      <div id="pane-risk" class="tab-pane">
+        <!-- Party Perspective Selector -->
+        <div class="perspective-bar">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">EVALUATE PERSPECTIVE:</span>
+          <div id="perspectiveButtons" style="display: flex; gap: 0.5rem;">
+            <!-- Rendered based on document type (Tenant/Landlord, Customer/Vendor, etc.) -->
+          </div>
+        </div>
+
+        <!-- Risk Gauge & Summary -->
+        <div class="risk-meter-box">
+          <div id="riskGaugeCircle" class="risk-circle">
+            <span id="riskScoreValue" class="risk-circle-num">--</span>
+            <span class="risk-circle-label">OUT OF 100</span>
+          </div>
+          <div class="risk-summary-text">
+            <h3 id="riskTierTitle">Calculating Perspective Risk...</h3>
+            <p id="riskSummaryDesc">Evaluating clauses against reference market standards and checking exposure for the selected party role.</p>
+          </div>
+        </div>
+
+        <!-- Risk Items List -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title"><span>🛡️</span> Clause Deviation & Exposure Breakdown</h2>
+            <span class="badge badge-warning" id="riskItemsCountBadge">0 Assessed</span>
+          </div>
+          <div id="riskItemsList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================================
+           TAB 3: GROUNDED QA STUDIO
+           ========================================================================= -->
+      <div id="pane-qa" class="tab-pane">
+        <div class="qa-studio">
+          <!-- Suggested Prompts -->
+          <div class="suggested-queries">
+            <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center; font-weight: 600;">TEST BENCHMARKS:</span>
+            <button class="query-chip" data-q="What is the security deposit amount?">🔍 In-Scope: Security Deposit</button>
+            <button class="query-chip" data-q="What is the notice period for terminating the contract?">🔍 In-Scope: Notice Period</button>
+            <button class="query-chip" data-q="Can I pay rent using Bitcoin or cryptocurrency?">🚫 Adversarial: Cryptocurrency</button>
+            <button class="query-chip" data-q="Should I sign this contract and will I win if I sue?">🛡️ Guardrail: Legal Advice</button>
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div id="qaMessages" class="qa-messages">
+            <div class="message-card agent">
+              <strong>ClauseLens Grounded Intelligence Assistant</strong><br>
+              Ask any question regarding provisions, terms, or obligations in the active document. All answers are grounded strictly in contract clauses with exact span citations and bounding box coordinates.
+            </div>
+          </div>
+
+          <!-- QA Input Bar -->
+          <form id="qaForm" class="qa-input-bar">
+            <input type="text" id="qaInput" class="qa-input" placeholder="Ask a question regarding the active document (e.g., 'What are the payment deadlines?')..." autocomplete="off">
+            <button type="submit" class="btn-primary"><span>Ask</span></button>
+          </form>
+        </div>
+      </div>
+
+      <!-- =========================================================================
+           TAB 4: SEMANTIC DIFF & COMPARISON
+           ========================================================================= -->
+      <div id="pane-compare" class="tab-pane">
+        <div class="glass-card" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h2 class="card-title"><span>⚖️</span> Semantic Document Comparison & Alignment</h2>
+            <button id="btnRunCompare" class="btn-primary">Run Comparison</button>
+          </div>
+          <div style="display: flex; gap: 1.5rem; align-items: center;">
+            <div class="selector-group" style="flex: 1;">
+              <span class="selector-label">Baseline Document (v1):</span>
+              <select id="compareDoc1" class="doc-select" style="width: 100%;"></select>
+            </div>
+            <span style="font-weight: 700; color: var(--accent-primary);">VS</span>
+            <div class="selector-group" style="flex: 1;">
+              <span class="selector-label">Revised Document (v2):</span>
+              <select id="compareDoc2" class="doc-select" style="width: 100%;"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diff Stat Summary -->
+        <div class="profile-banner">
+          <div class="stat-card">
+            <div class="stat-icon" style="color: var(--status-success);">+</div>
+            <div class="stat-data">
+              <span class="stat-label">Added Clauses</span>
+              <span id="statDiffAdded" class="stat-value" style="color: var(--status-success);">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color: var(--status-danger);">-</div>
+            <div class="stat-data">
+              <span class="stat-label">Removed Clauses</span>
+              <span id="statDiffRemoved" class="stat-value" style="color: var(--status-danger);">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color: var(--status-warning);">Δ</div>
+            <div class="stat-data">
+              <span class="stat-label">Materially Modified</span>
+              <span id="statDiffModified" class="stat-value" style="color: var(--status-warning);">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diff Details Content -->
+        <div id="diffResultsContainer">
+          <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Select two contract versions above and click "Run Comparison".</p>
+        </div>
+      </div>
+
+      <!-- =========================================================================
+           TAB 5: ACTIONABLE HUB
+           ========================================================================= -->
+      <div id="pane-actionable" class="tab-pane">
+        <!-- Action Subtabs -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+          <button class="role-pill active" data-action="deadlines">📅 Deadlines & .ics Export</button>
+          <button class="role-pill" data-action="lawyer-prep">📋 Lawyer-Prep Brief</button>
+          <button class="role-pill" data-action="rewriter">🌐 Multilingual Rewrites</button>
+          <button class="role-pill" data-action="negotiate">🤝 Negotiation Counter-Proposals</button>
+        </div>
+
+        <!-- Action 1: Deadlines -->
+        <div id="subpane-deadlines" class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title"><span>📅</span> Contract Timeline & Deadlines</h2>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <label style="font-size: 0.8rem; color: var(--text-muted);">Effective Base Date:</label>
+              <input type="date" id="effectiveDateInput" value="2026-10-01" style="background: var(--bg-input); border: 1px solid var(--border-subtle); color: white; padding: 4px 8px; border-radius: 6px; font-family: var(--font-sans);">
+              <button id="btnExportIcs" class="btn-primary" style="font-size: 0.8rem;">Export .ics Calendar</button>
+            </div>
+          </div>
+          <div id="deadlinesTimeline" class="timeline">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Action 2: Lawyer-Prep -->
+        <div id="subpane-lawyer-prep" class="glass-card" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title"><span>📋</span> Lawyer Consultation Preparation Pack</h2>
+            <span class="badge badge-info">Automated Audit</span>
+          </div>
+          <div id="lawyerPrepContent">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Action 3: Rewrites & Translations -->
+        <div id="subpane-rewriter" class="glass-card" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title"><span>🌐</span> Plain-Language Simplification & Indic Translations</h2>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn-secondary active-lang" data-lang="en">English</button>
+              <button class="btn-secondary" data-lang="hi">हिंदी (Hindi)</button>
+              <button class="btn-secondary" data-lang="kn">ಕನ್ನಡ (Kannada)</button>
+            </div>
+          </div>
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Reading Level:</span>
+            <label style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;"><input type="radio" name="rwLevel" value="plain_english" checked> Standard Plain English</label>
+            <label style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;"><input type="radio" name="rwLevel" value="simple"> 8th-Grade Simple (No Legal Jargon)</label>
+          </div>
+          <div id="rewriterCardsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Action 4: Negotiations -->
+        <div id="subpane-negotiate" class="glass-card" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title"><span>🤝</span> Balanced Negotiation Alternatives</h2>
+            <span class="badge badge-warning">For Aggressive Clauses</span>
+          </div>
+          <div id="negotiationCardsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Upload Document Modal -->
+    <div id="uploadModal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="card-header">
+          <h2 class="card-title">Upload Legal Document</h2>
+          <button id="btnCloseUpload" class="btn-secondary" style="padding: 2px 8px;">✕</button>
+        </div>
+        <div id="dropzone" class="dropzone">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📄</div>
+          <p style="font-weight: 600; margin-bottom: 0.25rem;">Drag & drop contract file here</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Supports PDF or DOCX</p>
+          <input type="file" id="fileInput" accept=".pdf,.docx,.doc" style="display: none;">
+          <button id="btnChooseFile" class="btn-secondary" style="margin-top: 1rem;">Browse Files</button>
+        </div>
+        <div id="uploadStatus" style="margin-top: 1rem; font-size: 0.85rem; text-align: center; color: var(--text-muted);"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

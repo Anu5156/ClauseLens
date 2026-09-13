@@ -1,0 +1,58 @@
+{
+  "documents": {
+    "doc_residential_lease": {
+      "doc_type": "rental",
+      "clauses": {
+        "2": "payment_terms",
+        "2.1": "payment_terms",
+        "4.1": "notice_period",
+        "5": "governing_law",
+        "5.1": "dispute_resolution"
+      },
+      "expected_crossrefs": [
+        {
+          "from_clause_number": "2.1",
+          "target_label": "Section 14.3",
+          "is_dangling": true
+        }
+      ],
+      "expected_defects": [
+        {
+          "defect_type": "dangling_crossref",
+          "target": "Section 14.3"
+        }
+      ]
+    },
+    "doc_employment_agreement": {
+      "doc_type": "employment",
+      "clauses": {
+        "1.1": "payment_terms",
+        "3.1": "payment_terms",
+        "4": "non_compete",
+        "5.1": "notice_period"
+      },
+      "expected_crossrefs": [],
+      "expected_defects": [
+        {
+          "defect_type": "undefined_term",
+          "target": "Restricted Territory"
+        }
+      ]
+    },
+    "doc_saas_terms": {
+      "doc_type": "saas_terms",
+      "clauses": {
+        "ARTICLE III": "payment_terms",
+        "ARTICLE IV": "termination",
+        "ARTICLE XI": "notice_period"
+      },
+      "expected_crossrefs": [],
+      "expected_defects": [
+        {
+          "defect_type": "conflicting_notice",
+          "target": "30 days"
+        }
+      ]
+    }
+  }
+}

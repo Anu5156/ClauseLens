@@ -1,0 +1,198 @@
+{
+  "indemnity": [
+    {
+      "id": "ref_indemnity_std",
+      "rating": "standard",
+      "text": "Each party agrees to indemnify, defend, and hold harmless the other party from and against third-party claims arising out of its gross negligence, willful misconduct, or material breach of this Agreement.",
+      "description": "Balanced mutual indemnification limited to gross negligence and material breach."
+    },
+    {
+      "id": "ref_indemnity_agg",
+      "rating": "aggressive",
+      "text": "Customer shall unconditionally indemnify, defend, and hold harmless Vendor, its affiliates, officers, and agents against any and all claims, losses, damages, or liabilities whatsoever, regardless of fault or negligence.",
+      "description": "Unilateral, uncapped indemnification placing all liabilities on one party regardless of fault."
+    },
+    {
+      "id": "ref_indemnity_unusual",
+      "rating": "unusual",
+      "text": "Indemnification obligations under this clause shall be secured by an irrevocable bank guarantee posted within 10 business days of contract execution.",
+      "description": "Non-standard security requirement backing indemnification commitments."
+    }
+  ],
+  "limitation_of_liability": [
+    {
+      "id": "ref_lol_std",
+      "rating": "standard",
+      "text": "Except for indemnification obligations or breaches of confidentiality, neither party's aggregate liability under this Agreement shall exceed the total fees paid or payable by Customer in the 12 months preceding the claim.",
+      "description": "Mutual aggregate liability cap tied to 12 months of contract value with standard carve-outs."
+    },
+    {
+      "id": "ref_lol_agg",
+      "rating": "aggressive",
+      "text": "Vendor's aggregate liability for all claims arising out of or related to this Agreement shall be strictly limited to $100. Vendor shall not be liable for any indirect, special, or consequential damages under any circumstances.",
+      "description": "Extremely low nominal liability cap ($100) disclaiming all indirect damages for Vendor."
+    },
+    {
+      "id": "ref_lol_unusual",
+      "rating": "unusual",
+      "text": "Any claim for damages must be filed within 30 days of the event giving rise to the claim, failing which all claims shall be irrevocably waived and barred.",
+      "description": "Unusually short 30-day limitation period to file liability claims."
+    }
+  ],
+  "termination": [
+    {
+      "id": "ref_term_std",
+      "rating": "standard",
+      "text": "Either party may terminate this Agreement for convenience upon 30 days written notice, or immediately upon written notice if the other party materially breaches and fails to cure within 15 days.",
+      "description": "Standard mutual termination for convenience and for cause with cure period."
+    },
+    {
+      "id": "ref_term_agg",
+      "rating": "aggressive",
+      "text": "Company reserves the right to terminate this Agreement immediately without cause, without notice, and without penalty at any time.",
+      "description": "Unilateral immediate termination without cause or notice for one party."
+    },
+    {
+      "id": "ref_term_unusual",
+      "rating": "unusual",
+      "text": "Upon termination, receiving party must forfeit all equipment, pre-paid fees, and proprietary work product accumulated over the term.",
+      "description": "Severe forfeiture provisions triggered automatically upon termination."
+    }
+  ],
+  "auto_renewal": [
+    {
+      "id": "ref_renewal_std",
+      "rating": "standard",
+      "text": "This Agreement shall automatically renew for successive 1-year terms unless either party provides written notice of non-renewal at least 30 days prior to the end of the current term.",
+      "description": "Standard auto-renewal clause with reasonable 30-day opt-out notice."
+    },
+    {
+      "id": "ref_renewal_agg",
+      "rating": "aggressive",
+      "text": "This Agreement automatically renews for additional 3-year periods unless Customer provides written notice of cancellation by certified mail exactly 180 days prior to expiry.",
+      "description": "Long multi-year auto-renewal lock-in with narrow 180-day certified mail notice restriction."
+    }
+  ],
+  "non_compete": [
+    {
+      "id": "ref_compete_std",
+      "rating": "standard",
+      "text": "During the term and for 6 months following termination, Employee shall not directly engage in or perform services for direct competitors within the specified municipal metropolitan area.",
+      "description": "Narrowly tailored post-employment non-compete restricted in time and geography."
+    },
+    {
+      "id": "ref_compete_agg",
+      "rating": "aggressive",
+      "text": "Employee agrees not to work for, start, consult, or assist any business operating in the software or tech industry worldwide for a period of 5 years following termination.",
+      "description": "Overbroad global 5-year non-compete covering the entire industry."
+    }
+  ],
+  "confidentiality": [
+    {
+      "id": "ref_conf_std",
+      "rating": "standard",
+      "text": "Receiving Party agrees to protect Disclosing Party's Confidential Information using at least the same degree of care it uses for its own confidential information, for a period of 3 years.",
+      "description": "Standard mutual non-disclosure commitment with reasonable 3-year duration."
+    },
+    {
+      "id": "ref_conf_agg",
+      "rating": "aggressive",
+      "text": "Customer shall hold all Vendor materials confidential in perpetuity and agrees to liquidating damages of $500,000 for any alleged disclosure.",
+      "description": "Perpetual non-disclosure with high liquidated damages penalty."
+    }
+  ],
+  "ip_assignment": [
+    {
+      "id": "ref_ip_std",
+      "rating": "standard",
+      "text": "Vendor assigns to Customer all intellectual property rights in deliverables created specifically for Customer under this Statement of Work upon full payment.",
+      "description": "Standard work-for-hire assignment conditioned on full payment."
+    },
+    {
+      "id": "ref_ip_agg",
+      "rating": "aggressive",
+      "text": "Company retains ownership of all inventions, ideas, code, and patents created by Employee during employment, as well as all personal projects developed on Employee's personal time.",
+      "description": "Overreaching IP claim over employee's personal off-duty inventions."
+    }
+  ],
+  "payment_terms": [
+    {
+      "id": "ref_pay_std",
+      "rating": "standard",
+      "text": "Invoices are payable within 30 days of receipt. Late payments shall accrue interest at the rate of 1.5% per month or the maximum rate permitted by law.",
+      "description": "Standard Net-30 payment terms with standard late fee."
+    },
+    {
+      "id": "ref_pay_agg",
+      "rating": "aggressive",
+      "text": "Payment is due immediately upon invoice issuance. Late payments incur a mandatory 15% flat compounding fee per week.",
+      "description": "Immediate due date with exorbitant weekly compounding penalties."
+    }
+  ],
+  "notice_period": [
+    {
+      "id": "ref_notice_std",
+      "rating": "standard",
+      "text": "All formal notices must be given in writing and sent via email or registered mail to the designated address, requiring 30 days advance notice.",
+      "description": "Clear 30-day written notice requirement."
+    },
+    {
+      "id": "ref_notice_agg",
+      "rating": "aggressive",
+      "text": "Landlord may adjust rent or lease terms upon 3 days electronic notice.",
+      "description": "Unreasonably short 3-day notice for major contract adjustments."
+    }
+  ],
+  "dispute_resolution": [
+    {
+      "id": "ref_dispute_std",
+      "rating": "standard",
+      "text": "Any dispute arising under this Agreement shall first be submitted to good-faith mediation, and if unresolved, settled by binding arbitration in accordance with AAA rules.",
+      "description": "Standard multi-step dispute resolution (mediation then arbitration)."
+    },
+    {
+      "id": "ref_dispute_agg",
+      "rating": "aggressive",
+      "text": "Customer waives all rights to jury trial, class action litigation, or arbitration, and agrees that Vendor's local court shall have exclusive jurisdiction.",
+      "description": "Unilateral waiver of class actions and jury trial."
+    }
+  ],
+  "governing_law": [
+    {
+      "id": "ref_law_std",
+      "rating": "standard",
+      "text": "This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of law principles.",
+      "description": "Standard commercial jurisdiction choice of law."
+    }
+  ],
+  "unilateral_amendment": [
+    {
+      "id": "ref_amend_std",
+      "rating": "standard",
+      "text": "No amendment or modification of this Agreement shall be valid unless executed in writing by authorized representatives of both parties.",
+      "description": "Mutual written consent requirement for any contract modification."
+    },
+    {
+      "id": "ref_amend_agg",
+      "rating": "aggressive",
+      "text": "Provider reserves the right to modify these terms at any time by updating its website, and Customer's continued use constitutes acceptance of modified terms.",
+      "description": "Unilateral modification without affirmative notice or opt-out."
+    }
+  ],
+  "data_privacy": [
+    {
+      "id": "ref_privacy_std",
+      "rating": "standard",
+      "text": "Each party shall comply with applicable data protection laws (including GDPR and CCPA) regarding personal data processed under this Agreement.",
+      "description": "Mutual privacy and data security compliance commitment."
+    }
+  ],
+  "force_majeure": [
+    {
+      "id": "ref_fm_std",
+      "rating": "standard",
+      "text": "Neither party shall be liable for failure to perform due to causes beyond its reasonable control, including acts of God, war, pandemic, or government action.",
+      "description": "Standard mutual force majeure excusing performance delays."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ClauseLens//Legal Deadlines Calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:doc_saas_terms_v2_deadline_1@clauselens.ai
+DTSTAMP:20260913T155927Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261011
+SUMMARY:[ClauseLens] Invoice Payment Due (Net 10)
+DESCRIPTION:Party: Customer\nClause: ARTICLE III\nTrigger: Invoice issuance / receipt\nDocument: saas_terms_v2.pdf
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Legal Deadline Reminder
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:doc_saas_terms_v2_deadline_2@clauselens.ai
+DTSTAMP:20260913T155927Z
+DTSTART;VALUE=DATE:20270404
+DTEND;VALUE=DATE:20270404
+SUMMARY:[ClauseLens] Non-Renewal Written Opt-Out Deadline (180 days prior to expiry)
+DESCRIPTION:Party: Customer\nClause: ARTICLE IV\nTrigger: Contract expiration (180 days prior)\nDocument: saas_terms_v2.pdf
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Legal Deadline Reminder
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+END:VCALENDAR

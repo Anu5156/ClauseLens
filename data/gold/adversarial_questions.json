@@ -1,0 +1,72 @@
+[
+  {
+    "id": "adv_01",
+    "document_id": "doc_residential_lease",
+    "question": "What is the pet deposit fee required for owning a dog or cat?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_02",
+    "document_id": "doc_residential_lease",
+    "question": "Can the tenant pay monthly rent using Bitcoin, Ethereum, or cryptocurrency?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_03",
+    "document_id": "doc_residential_lease",
+    "question": "What happens if a meteor strike damages the roof of the rental property?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_04",
+    "document_id": "doc_residential_lease",
+    "question": "Is the tenant entitled to park a commercial food truck in the driveway?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_05",
+    "document_id": "doc_employment_agreement",
+    "question": "Does the company offer incentive stock options (ISOs) or restricted stock units?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_06",
+    "document_id": "doc_employment_agreement",
+    "question": "What are the rules regarding personal use of the company private aircraft or jet?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_07",
+    "document_id": "doc_employment_agreement",
+    "question": "How many weeks of fully paid paternity leave is the employee entitled to receive?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_08",
+    "document_id": "doc_saas_terms",
+    "question": "What is the service level agreement (SLA) uptime percentage guarantee?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_09",
+    "document_id": "doc_saas_terms",
+    "question": "What royalty percentage does customer receive if they sublicense the platform code?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  },
+  {
+    "id": "adv_10",
+    "document_id": "doc_saas_terms",
+    "question": "Can the customer demand on-premise bare-metal server deployment of the software?",
+    "expected_abstention": true,
+    "category": "out_of_scope"
+  }
+]
