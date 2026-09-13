@@ -22,10 +22,14 @@ const tabPanes = document.querySelectorAll(".tab-pane");
 
 tabButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    tabButtons.forEach(b => b.classList.remove("active"));
+    tabButtons.forEach(b => {
+      b.classList.remove("active");
+      b.setAttribute("aria-selected", "false");
+    });
     tabPanes.forEach(p => p.classList.remove("active"));
-    
+
     btn.classList.add("active");
+    btn.setAttribute("aria-selected", "true");
     const target = document.getElementById(`pane-${btn.dataset.tab}`);
     if (target) target.classList.add("active");
 

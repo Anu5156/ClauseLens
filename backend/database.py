@@ -90,6 +90,14 @@ def init_db():
         );
         """)
 
+        # Performance & Concurrency Optimization
+        cursor.execute("PRAGMA journal_mode = WAL;")
+        cursor.execute("PRAGMA synchronous = NORMAL;")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_clauses_doc ON clauses (document_id, order_index);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_crossrefs_doc ON crossrefs (document_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_defects_doc ON defects (document_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_definitions_doc ON definitions (document_id);")
+
         # Migration check if existing database without new columns
         try:
             cursor.execute("ALTER TABLE documents ADD COLUMN doc_type TEXT DEFAULT 'unknown'")
