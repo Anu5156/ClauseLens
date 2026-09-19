@@ -1,20 +1,42 @@
 /**
  * ClauseLens Front-End Application Logic
- * Single Page Application interacting with FastAPI REST endpoints.
+ * Modern FAANG UI/UX Design & High-Fidelity SPA
  */
 
-// Global State
+// ─── Global State ──────────────────────────────────────────────────────────
 let currentDocId = "";
 let currentDocData = null;
+let currentProfileData = null;
 let currentPerspective = "tenant";
 let currentLang = "en";
 let currentRewriteLevel = "plain_english";
+let activeCategoryFilter = "ALL";
+let activeSearchQuery = "";
 
-// DOM Elements
+// ─── DOM References ────────────────────────────────────────────────────────
 const docSelector = document.getElementById("docSelector");
 const compareDoc1 = document.getElementById("compareDoc1");
 const compareDoc2 = document.getElementById("compareDoc2");
+const btnSwapCompare = document.getElementById("btnSwapCompare");
 const btnRunCompare = document.getElementById("btnRunCompare");
+const toastContainer = document.getElementById("toastContainer");
+
+// Clause Inspector Drawer Elements
+const clauseDrawerOverlay = document.getElementById("clauseDrawerOverlay");
+const clauseDrawer = document.getElementById("clauseDrawer");
+const btnCloseDrawer = document.getElementById("btnCloseDrawer");
+const drawerCategoryBadge = document.getElementById("drawerCategoryBadge");
+const drawerClauseTitle = document.getElementById("drawerClauseTitle");
+const drawerClauseNumber = document.getElementById("drawerClauseNumber");
+const drawerPageSpan = document.getElementById("drawerPageSpan");
+const drawerClauseText = document.getElementById("drawerClauseText");
+const btnCopyClauseText = document.getElementById("btnCopyClauseText");
+const btnDrawerAskQA = document.getElementById("btnDrawerAskQA");
+let activeInspectedClause = null;
+
+// Tree Toolbar Elements
+const treeSearchInput = document.getElementById("treeSearchInput");
+const treeCategoryFilters = document.getElementById("treeCategoryFilters");
 
 // Tab Navigation
 const tabButtons = document.querySelectorAll(".tab-btn");
@@ -22,24 +44,27 @@ const tabPanes = document.querySelectorAll(".tab-pane");
 
 tabButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    tabButtons.forEach(b => {
-      b.classList.remove("active");
-      b.setAttribute("aria-selected", "false");
-    });
-    tabPanes.forEach(p => p.classList.remove("active"));
-
-    btn.classList.add("active");
-    btn.setAttribute("aria-selected", "true");
-    const target = document.getElementById(`pane-${btn.dataset.tab}`);
-    if (target) target.classList.add("active");
-
-    if (btn.dataset.tab === "actionable") {
-      loadDeadlines();
-    } else if (btn.dataset.tab === "compare") {
-      setupDefaultCompareDocs();
-    }
+    switchTab(btn.dataset.tab);
   });
 });
+
+function switchTab(tabKey) {
+  tabButtons.forEach(b => {
+    const isActive = b.dataset.tab === tabKey;
+    b.classList.toggle("active", isActive);
+    b.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  tabPanes.forEach(p => {
+    p.classList.toggle("active", p.id === `pane-${tabKey}`);
+  });
+
+  if (tabKey === "actionable") {
+    loadDeadlines();
+  } else if (tabKey === "compare") {
+    setupDefaultCompareDocs();
+  }
+}
 
 // Actionable Sub-Tabs
 const actionPills = document.querySelectorAll("#pane-actionable .role-pill");
@@ -60,12 +85,108 @@ actionPills.forEach(pill => {
   });
 });
 
-// Initialize Application
+// ─── Toast Notification System ─────────────────────────────────────────────
+function showToast(message, type = "info", duration = 3500) {
+  if (!toastContainer) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+
+  const iconSvg = {
+    success: `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--status-success)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+    warning: `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--status-warning)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    danger: `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--status-danger)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+    info: `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--status-info)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+  }[type] || "";
+
+  toast.innerHTML = `
+    ${iconSvg}
+    <div style="flex: 1; font-weight: 500;">${message}</div>
+    <button style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 2px;" aria-label="Close">✕</button>
+  `;
+
+  toast.querySelector("button").addEventListener("click", () => removeToast(toast));
+
+  toastContainer.appendChild(toast);
+
+  const timeoutId = setTimeout(() => {
+    removeToast(toast);
+  }, duration);
+
+  function removeToast(el) {
+    clearTimeout(timeoutId);
+    el.style.opacity = "0";
+    el.style.transform = "translateX(40px)";
+    setTimeout(() => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 250);
+  }
+}
+
+// ─── Slide-Over Clause Inspector ───────────────────────────────────────────
+function openClauseInspector(clause) {
+  if (!clause) return;
+  activeInspectedClause = clause;
+
+  drawerCategoryBadge.textContent = clause.category || "GENERAL";
+  drawerClauseTitle.textContent = clause.title || "Untitled Clause";
+  drawerClauseNumber.textContent = clause.clause_number ? `§ ${clause.clause_number}` : "§ -";
+
+  let spansSummary = "Offset: Page 1";
+  if (clause.spans && clause.spans.length > 0) {
+    const s = clause.spans[0];
+    spansSummary = `Pg ${s.page} [${s.bbox ? s.bbox.map(n => Math.round(n)).join(", ") : "0, 0, 0, 0"}]`;
+  }
+  drawerPageSpan.textContent = spansSummary;
+  drawerClauseText.textContent = clause.text || "No text available.";
+
+  clauseDrawerOverlay.classList.add("open");
+  clauseDrawer.classList.add("open");
+  clauseDrawer.setAttribute("aria-hidden", "false");
+}
+
+function closeClauseInspector() {
+  clauseDrawerOverlay.classList.remove("open");
+  clauseDrawer.classList.remove("open");
+  clauseDrawer.setAttribute("aria-hidden", "true");
+  activeInspectedClause = null;
+}
+
+if (btnCloseDrawer) btnCloseDrawer.addEventListener("click", closeClauseInspector);
+if (clauseDrawerOverlay) clauseDrawerOverlay.addEventListener("click", closeClauseInspector);
+
+if (btnCopyClauseText) {
+  btnCopyClauseText.addEventListener("click", () => {
+    if (!activeInspectedClause) return;
+    navigator.clipboard.writeText(activeInspectedClause.text || "").then(() => {
+      showToast(`Copied Clause ${activeInspectedClause.clause_number || ''} text to clipboard`, "success");
+    }).catch(() => {
+      showToast("Unable to copy to clipboard", "warning");
+    });
+  });
+}
+
+if (btnDrawerAskQA) {
+  btnDrawerAskQA.addEventListener("click", () => {
+    if (!activeInspectedClause) return;
+    const clauseNum = activeInspectedClause.clause_number || "";
+    const clauseTitle = activeInspectedClause.title || "";
+    closeClauseInspector();
+    switchTab("qa");
+    const qaInput = document.getElementById("qaInput");
+    if (qaInput) {
+      qaInput.value = `Explain the rights, liabilities, and obligations outlined under Clause ${clauseNum}: ${clauseTitle}.`;
+      qaInput.focus();
+    }
+  });
+}
+
+// ─── Initialize Application ────────────────────────────────────────────────
 async function initApp() {
   try {
     const res = await fetch("/api/documents");
     const docs = await res.json();
-    
+
     if (!docs || docs.length === 0) {
       docSelector.innerHTML = `<option value="">No contracts loaded</option>`;
       return;
@@ -75,31 +196,29 @@ async function initApp() {
     compareDoc1.innerHTML = "";
     compareDoc2.innerHTML = "";
 
-    docs.forEach((d, idx) => {
+    docs.forEach(d => {
       const opt = document.createElement("option");
       opt.value = d.id;
       opt.textContent = `${d.filename} (${d.file_type.toUpperCase()} · ${d.doc_type})`;
       docSelector.appendChild(opt);
 
-      // Clone for compare selectors
       compareDoc1.appendChild(opt.cloneNode(true));
       compareDoc2.appendChild(opt.cloneNode(true));
     });
 
-    // Default select first doc
     currentDocId = docs[0].id;
     docSelector.value = currentDocId;
     await loadDocument(currentDocId);
 
-    // Setup compare defaults
     setupDefaultCompareDocs();
 
   } catch (err) {
     console.error("Failed to fetch documents:", err);
+    showToast("Error loading document index from server", "danger");
   }
 }
 
-// Setup default compare documents (saas_terms vs saas_terms_v2 if available)
+// Setup default compare documents
 function setupDefaultCompareDocs() {
   const options = Array.from(compareDoc1.options).map(o => o.value);
   if (options.includes("doc_saas_terms") && options.includes("doc_saas_terms_v2")) {
@@ -111,28 +230,36 @@ function setupDefaultCompareDocs() {
   }
 }
 
-// Load Document Data & Render Views
+// Swap documents in compare view
+if (btnSwapCompare) {
+  btnSwapCompare.addEventListener("click", () => {
+    const temp = compareDoc1.value;
+    compareDoc1.value = compareDoc2.value;
+    compareDoc2.value = temp;
+    showToast("Swapped baseline and revised documents", "info", 1800);
+  });
+}
+
+// ─── Load Document & Render Views ──────────────────────────────────────────
 async function loadDocument(docId) {
   currentDocId = docId;
   try {
-    // 1. Fetch Document Parsed Tree & Metadata
     const res = await fetch(`/api/documents/${docId}`);
     currentDocData = await res.json();
 
-    // 2. Fetch Document Profile (Template Compliance)
     const profRes = await fetch(`/api/documents/${docId}/profile`);
-    const profile = await profRes.json();
+    currentProfileData = await profRes.json();
 
-    renderDocumentSummary(currentDocData, profile);
-    renderClauseTree(currentDocData.clauses);
+    renderDocumentSummary(currentDocData, currentProfileData);
+    renderFilteredClauseTree();
     renderDefectsAndDefinitions(currentDocData.defects, currentDocData.definitions);
     configurePerspectiveButtons(currentDocData.doc_type);
 
-    // 3. Load Perspective Risk with default perspective
     await loadRiskProfile(docId, currentPerspective);
 
   } catch (err) {
     console.error("Error loading document:", err);
+    showToast(`Error retrieving document analysis for: ${docId}`, "danger");
   }
 }
 
@@ -144,7 +271,6 @@ function renderDocumentSummary(doc, profile) {
   document.getElementById("statDefectCount").textContent = doc.defects.length;
   document.getElementById("treeClauseTotal").textContent = `${doc.clauses.length} Clauses`;
 
-  // Audit Compliance Box
   const auditContainer = document.getElementById("missingClauseAuditContent");
   const missingBadge = document.getElementById("profileStatusBadge");
 
@@ -152,63 +278,120 @@ function renderDocumentSummary(doc, profile) {
     missingBadge.className = "badge badge-warning";
     missingBadge.textContent = `${profile.missing_clauses.length} Missing Standard Clauses`;
     auditContainer.innerHTML = `
-      <p style="margin-bottom: 0.5rem;"><strong>Expected Clauses Present:</strong> ${profile.present_clauses.map(c => `<span class="node-number" style="margin-right:4px;">${c}</span>`).join(" ")}</p>
-      <p style="color: #FCD34D;"><strong>Missing Standard Provisions Detected:</strong> ${profile.missing_clauses.map(c => `<span class="badge badge-warning" style="margin-right:4px;">${c}</span>`).join(" ")}</p>
+      <div style="margin-bottom: 0.6rem;">
+        <span style="color: var(--text-muted); font-weight: 600;">Expected Clauses Present:</span> 
+        ${profile.present_clauses.map(c => `<span class="node-number" style="margin-right: 5px; font-size: 0.75rem;">${c}</span>`).join(" ")}
+      </div>
+      <div>
+        <span style="color: #FCD34D; font-weight: 600;">Missing Standard Provisions:</span> 
+        ${profile.missing_clauses.map(c => `<span class="badge badge-warning" style="margin-right: 5px;">${c}</span>`).join(" ")}
+      </div>
     `;
   } else {
     missingBadge.className = "badge badge-success";
     missingBadge.textContent = "100% Template Compliant";
     auditContainer.innerHTML = `
-      <p style="color: var(--status-success);">All standard clauses required for ${profile.doc_type_name} are present.</p>
+      <p style="color: var(--status-success); display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+        <span>All standard legal provisions required for ${profile.doc_type_name || doc.doc_type} are fully represented.</span>
+      </p>
     `;
   }
 }
 
-// Render Hierarchical Clause Tree
-function renderClauseTree(clauses) {
+// ─── Filtered Clause Tree Rendering ────────────────────────────────────────
+function renderFilteredClauseTree() {
   const container = document.getElementById("clauseTreeContainer");
   container.innerHTML = "";
 
-  if (!clauses || clauses.length === 0) {
-    container.innerHTML = `<p style="color: var(--text-muted);">No clauses detected.</p>`;
+  if (!currentDocData || !currentDocData.clauses || currentDocData.clauses.length === 0) {
+    container.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem; text-align: center;">No clauses detected in this document.</p>`;
     return;
   }
 
-  clauses.forEach(clause => {
+  const query = (activeSearchQuery || "").toLowerCase();
+  const catFilter = activeCategoryFilter.toUpperCase();
+
+  const filtered = currentDocData.clauses.filter(clause => {
+    // Category match
+    const category = (clause.category || "").toUpperCase();
+    const matchesCat = catFilter === "ALL" || category === catFilter || category.includes(catFilter);
+
+    // Search query match
+    if (!matchesCat) return false;
+    if (!query) return true;
+
+    const title = (clause.title || "").toLowerCase();
+    const text = (clause.text || "").toLowerCase();
+    const num = (clause.clause_number || "").toLowerCase();
+    return title.includes(query) || text.includes(query) || num.includes(query);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.5rem;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p style="font-weight: 600;">No clauses match your filter criteria.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.25rem;">Try a different keyword or category.</p>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(clause => {
     const node = document.createElement("div");
     node.className = "tree-node";
-    node.style.marginLeft = `${Math.max(0, (clause.level - 1) * 20)}px`;
+    node.style.marginLeft = `${Math.max(0, (clause.level - 1) * 18)}px`;
 
     let spansSummary = "Span: Offset [0-0]";
     if (clause.spans && clause.spans.length > 0) {
       const s = clause.spans[0];
-      spansSummary = `Pg ${s.page} [${s.bbox.map(n => Math.round(n)).join(", ")}]`;
+      spansSummary = `Pg ${s.page} [${s.bbox ? s.bbox.map(n => Math.round(n)).join(", ") : "0, 0, 0, 0"}]`;
     }
 
     node.innerHTML = `
       <div class="tree-node-header">
         <div class="node-title-group">
           <span class="node-number">${clause.clause_number || "§"}</span>
-          <span class="node-title">${clause.title}</span>
+          <span class="node-title">${clause.title || "Untitled Clause"}</span>
         </div>
-        <div style="display: flex; gap: 0.4rem; align-items: center;">
-          <span class="badge badge-info">${clause.category}</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span class="badge badge-info">${clause.category || "GENERAL"}</span>
           <span class="node-spans-pill">${spansSummary}</span>
         </div>
       </div>
       <p class="node-text">${clause.text}</p>
     `;
 
-    // Click to view full text modal/alert
+    // Click opens slide-over clause inspector
     node.addEventListener("click", () => {
-      alert(`[Clause ${clause.clause_number}: ${clause.title}]\nCategory: ${clause.category}\nSpans: ${spansSummary}\n\nFull Text:\n${clause.text}`);
+      openClauseInspector(clause);
     });
 
     container.appendChild(node);
   });
 }
 
-// Render Defects and Defined Terms
+// Tree Search & Filter Listeners
+if (treeSearchInput) {
+  treeSearchInput.addEventListener("input", (e) => {
+    activeSearchQuery = e.target.value.trim();
+    renderFilteredClauseTree();
+  });
+}
+
+if (treeCategoryFilters) {
+  treeCategoryFilters.querySelectorAll(".filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      treeCategoryFilters.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeCategoryFilter = btn.dataset.category || "ALL";
+      renderFilteredClauseTree();
+    });
+  });
+}
+
+// ─── Render Defects and Defined Terms ──────────────────────────────────────
 function renderDefectsAndDefinitions(defects, definitions) {
   // Defects
   const defectsContainer = document.getElementById("defectsList");
@@ -216,7 +399,7 @@ function renderDefectsAndDefinitions(defects, definitions) {
   defectsContainer.innerHTML = "";
 
   if (!defects || defects.length === 0) {
-    defectsContainer.innerHTML = `<p style="color: var(--status-success); font-size: 0.85rem;">No drafting flaws or dangling references detected.</p>`;
+    defectsContainer.innerHTML = `<p style="color: var(--status-success); font-size: 0.85rem; padding: 0.5rem;">No drafting flaws or dangling references detected.</p>`;
   } else {
     defects.forEach(d => {
       const isDangling = d.defect_type === "dangling_crossref";
@@ -224,16 +407,16 @@ function renderDefectsAndDefinitions(defects, definitions) {
       const badgeClass = isDangling ? "badge-danger" : (isConflicting ? "badge-warning" : "badge-info");
 
       const item = document.createElement("div");
-      item.style.padding = "0.75rem";
+      item.style.padding = "0.85rem";
       item.style.background = isDangling ? "rgba(244, 63, 94, 0.08)" : "rgba(255, 255, 255, 0.03)";
-      item.style.borderRadius = "8px";
-      item.style.border = `1px solid ${isDangling ? "rgba(244, 63, 94, 0.3)" : "var(--border-subtle)"}`;
+      item.style.borderRadius = "var(--radius-sm)";
+      item.style.border = `1px solid ${isDangling ? "rgba(244, 63, 94, 0.35)" : "var(--border-subtle)"}`;
       item.innerHTML = `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span class="badge ${badgeClass}">${d.defect_type}</span>
-          <span style="font-size: 0.72rem; color: var(--text-muted);">${d.severity.toUpperCase()}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <span class="badge ${badgeClass}">${d.defect_type.replace(/_/g, ' ')}</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">${d.severity.toUpperCase()}</span>
         </div>
-        <p style="font-size: 0.82rem; color: var(--text-secondary);">${d.description}</p>
+        <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5;">${d.description}</p>
       `;
       defectsContainer.appendChild(item);
     });
@@ -245,24 +428,24 @@ function renderDefectsAndDefinitions(defects, definitions) {
   defsContainer.innerHTML = "";
 
   if (!definitions || definitions.length === 0) {
-    defsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">No explicit definitions defined.</p>`;
+    defsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">No explicit defined terms declared.</p>`;
   } else {
     definitions.forEach(def => {
       const item = document.createElement("div");
-      item.style.padding = "0.6rem 0.8rem";
+      item.style.padding = "0.75rem 0.9rem";
       item.style.background = "rgba(255, 255, 255, 0.03)";
-      item.style.borderRadius = "6px";
+      item.style.borderRadius = "var(--radius-sm)";
       item.style.border = "1px solid var(--border-subtle)";
       item.innerHTML = `
-        <div style="font-weight: 600; font-size: 0.85rem; color: #38BDF8;">"${def.term}"</div>
-        <div style="font-size: 0.8rem; color: var(--text-secondary);">${def.definition}</div>
+        <div style="font-weight: 700; font-size: 0.86rem; color: #38BDF8; margin-bottom: 2px;">"${def.term}"</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">${def.definition}</div>
       `;
       defsContainer.appendChild(item);
     });
   }
 }
 
-// Configure Perspective Buttons based on Doc Type
+// ─── Configure Perspective Buttons ─────────────────────────────────────────
 function configurePerspectiveButtons(docType) {
   const container = document.getElementById("perspectiveButtons");
   container.innerHTML = "";
@@ -301,72 +484,79 @@ function configurePerspectiveButtons(docType) {
   });
 }
 
-// Load Perspective Risk Assessment
+// ─── Load Perspective Risk Assessment with Animated SVG Gauge ──────────────
 async function loadRiskProfile(docId, perspective) {
   try {
     const res = await fetch(`/api/documents/${docId}/risk?perspective=${perspective}`);
     const risk = await res.json();
 
-    const circle = document.getElementById("riskGaugeCircle");
+    const gaugeProgress = document.getElementById("riskGaugeProgress");
     const scoreVal = document.getElementById("riskScoreValue");
     const tierTitle = document.getElementById("riskTierTitle");
     const summaryDesc = document.getElementById("riskSummaryDesc");
     const itemsContainer = document.getElementById("riskItemsList");
     const badge = document.getElementById("riskItemsCountBadge");
 
-    scoreVal.textContent = risk.overall_risk_score;
+    const score = Math.round(risk.overall_risk_score || 0);
     badge.textContent = `${risk.risk_items.length} Assessed`;
 
-    // Dynamic coloring based on risk score
-    if (risk.overall_risk_score > 70) {
-      circle.className = "risk-circle";
+    // Animate score counter
+    animateCounter(scoreVal, score, 800);
+
+    // SVG Circular Progress animation (Circumference: 2 * PI * 60 = 376.99)
+    const circumference = 377;
+    const strokeOffset = circumference - (score / 100) * circumference;
+    if (gaugeProgress) {
+      gaugeProgress.style.strokeDashoffset = strokeOffset;
+    }
+
+    if (score > 70) {
+      if (gaugeProgress) gaugeProgress.style.stroke = "var(--status-danger)";
       tierTitle.textContent = `High Risk Exposure for ${perspective.toUpperCase()}`;
       tierTitle.style.color = "var(--status-danger)";
-      summaryDesc.textContent = `Multiple aggressive provisions, liability exposure, or structural flaws detected affecting the ${perspective}.`;
-    } else if (risk.overall_risk_score > 40) {
-      circle.className = "risk-circle";
-      circle.style.borderColor = "var(--status-warning)";
-      circle.style.background = "rgba(245, 158, 11, 0.08)";
+      summaryDesc.textContent = `Multiple aggressive provisions, liability exposure, or structural flaws detected disproportionately affecting the ${perspective}.`;
+    } else if (score > 40) {
+      if (gaugeProgress) gaugeProgress.style.stroke = "var(--status-warning)";
       tierTitle.textContent = `Moderate Risk Exposure for ${perspective.toUpperCase()}`;
       tierTitle.style.color = "var(--status-warning)";
-      summaryDesc.textContent = `Standard baseline provisions present with some non-standard clauses to review.`;
+      summaryDesc.textContent = `Standard baseline provisions present with some non-standard clauses to scrutinize.`;
     } else {
-      circle.className = "risk-circle low";
+      if (gaugeProgress) gaugeProgress.style.stroke = "var(--status-success)";
       tierTitle.textContent = `Low Risk Exposure for ${perspective.toUpperCase()}`;
       tierTitle.style.color = "var(--status-success)";
-      summaryDesc.textContent = `Provisions align with market-standard bilateral conventions.`;
+      summaryDesc.textContent = `Provisions align solidly with bilateral market conventions and balanced covenants.`;
     }
 
     // Render Risk Items
     itemsContainer.innerHTML = "";
     if (risk.risk_items.length === 0) {
-      itemsContainer.innerHTML = `<p style="color: var(--text-muted); padding: 1rem;">No notable risk deviations found.</p>`;
+      itemsContainer.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem; text-align: center;">No notable risk deviations found for this perspective.</p>`;
       return;
     }
 
     risk.risk_items.forEach(item => {
       const card = document.createElement("div");
       card.className = `risk-item-card ${item.perspective_risk.toLowerCase()}`;
-      
+
       let badgeClass = "badge-info";
       if (item.perspective_risk === "critical") badgeClass = "badge-danger";
       else if (item.perspective_risk === "high") badgeClass = "badge-warning";
       else if (item.perspective_risk === "low") badgeClass = "badge-success";
 
       card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
             <span class="node-number">Clause ${item.clause_number}</span>
-            <span style="font-weight: 700; font-size: 0.95rem;">${item.category.toUpperCase()}</span>
+            <span style="font-weight: 700; font-size: 0.98rem; color: var(--text-primary);">${item.category.toUpperCase()}</span>
           </div>
           <div style="display: flex; gap: 0.5rem;">
             <span class="badge ${badgeClass}">Risk: ${item.perspective_risk.toUpperCase()}</span>
             <span class="badge badge-info">Deviation: ${item.deviation_rating.toUpperCase()}</span>
           </div>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.6rem;">${item.rationale}</p>
-        <div style="font-size: 0.8rem; background: rgba(0,0,0,0.3); padding: 0.6rem 0.8rem; border-radius: 6px; border-left: 3px solid var(--accent-primary);">
-          <strong>Driving Text Span:</strong> "${item.driving_span}"
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.6;">${item.rationale}</p>
+        <div style="font-size: 0.82rem; background: rgba(0,0,0,0.35); padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary); color: #E2E8F0;">
+          <strong style="color: #A5B4FC;">Driving Text Span:</strong> "${item.driving_span}"
         </div>
       `;
       itemsContainer.appendChild(card);
@@ -374,10 +564,29 @@ async function loadRiskProfile(docId, perspective) {
 
   } catch (err) {
     console.error("Failed to load risk profile:", err);
+    showToast("Failed to calculate perspective risk profile", "danger");
   }
 }
 
-// Grounded QA Interaction
+function animateCounter(element, target, duration) {
+  let start = 0;
+  const startTime = performance.now();
+
+  function update(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const val = Math.round(start + (target - start) * easeOutQuad(progress));
+    element.textContent = val;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function easeOutQuad(x) {
+  return 1 - (1 - x) * (1 - x);
+}
+
+// ─── Grounded QA Interaction ───────────────────────────────────────────────
 const qaForm = document.getElementById("qaForm");
 const qaInput = document.getElementById("qaInput");
 const qaMessages = document.getElementById("qaMessages");
@@ -400,15 +609,20 @@ document.querySelectorAll(".query-chip").forEach(chip => {
 
 async function submitQuestion(question) {
   // Append User Message
-  appendMessage("user", question);
+  appendMessage("user", `<p>${escapeHtml(question)}</p>`);
   qaInput.value = "";
 
-  // Append Thinking Bubble
+  // Append Thinking Bubble with animated bouncing dots
   const thinkingId = "msg-thinking-" + Date.now();
   const thinkingNode = document.createElement("div");
   thinkingNode.id = thinkingId;
   thinkingNode.className = "message-card agent";
-  thinkingNode.innerHTML = `<em>Analyzing clause hierarchy and retrieving citations...</em>`;
+  thinkingNode.innerHTML = `
+    <div class="typing-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 6px;">Retrieving grounded citations & analyzing hierarchy...</span>
+  `;
   qaMessages.appendChild(thinkingNode);
   qaMessages.scrollTop = qaMessages.scrollHeight;
 
@@ -421,28 +635,36 @@ async function submitQuestion(question) {
     const qaResult = await res.json();
     thinkingNode.remove();
 
-    // Render Agent Answer
-    let contentHtml = `<p>${qaResult.answer}</p>`;
+    let contentHtml = `
+      <div class="agent-meta-header">
+        <span>ClauseLens Grounded Engine</span>
+        <button class="btn-copy-answer" title="Copy answer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copy</span>
+        </button>
+      </div>
+      <p style="white-space: pre-wrap;">${qaResult.answer}</p>
+    `;
 
     // Refusal Guardrail Alert
     if (qaResult.is_refusal) {
       contentHtml += `
         <div class="refusal-alert">
-          <strong>⚠️ Informational Guardrail:</strong> This query solicited legal advice or case prediction. ClauseLens operates strictly as an objective analytical engine and never provides legal advice.
+          <strong>⚠️ Informational Guardrail:</strong> This query solicited legal advice or court case prediction. ClauseLens operates strictly as an objective analytical engine and never provides formal legal advice.
         </div>
       `;
     }
 
-    // Citations with Spans & BBoxes
+    // Grounded Citations
     if (qaResult.cited_clauses && qaResult.cited_clauses.length > 0) {
-      contentHtml += `<div class="citation-box"><strong>Grounded Clause Citations:</strong>`;
+      contentHtml += `<div class="citation-box"><span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Grounded Clause Citations:</span>`;
       qaResult.cited_clauses.forEach(c => {
-        let spanCoords = "Coordinates: [54, 143, 401, 156]";
+        let spanCoords = "Coordinates: [0, 0, 0, 0]";
         if (c.spans && c.spans.length > 0) {
-          spanCoords = `Pg ${c.spans[0].page} [${c.spans[0].bbox.map(Math.round).join(", ")}]`;
+          spanCoords = `Pg ${c.spans[0].page} [${c.spans[0].bbox ? c.spans[0].bbox.map(Math.round).join(", ") : ""}]`;
         }
         contentHtml += `
-          <div class="citation-pill">
+          <div class="citation-pill" data-clause-num="${c.clause_number}">
             <span>📍 Clause ${c.clause_number}: ${c.title}</span>
             <span style="color: var(--text-muted); font-size: 0.7rem;">(${spanCoords})</span>
           </div>
@@ -451,11 +673,33 @@ async function submitQuestion(question) {
       contentHtml += `</div>`;
     }
 
-    appendMessage("agent", contentHtml);
+    const msgEl = appendMessage("agent", contentHtml);
+
+    // Setup Copy button listener
+    const copyBtn = msgEl.querySelector(".btn-copy-answer");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(qaResult.answer).then(() => {
+          showToast("Answer copied to clipboard", "success");
+        });
+      });
+    }
+
+    // Setup citation pill clicks to open Clause Inspector
+    msgEl.querySelectorAll(".citation-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        const num = pill.dataset.clauseNum;
+        if (currentDocData && currentDocData.clauses) {
+          const matched = currentDocData.clauses.find(cl => cl.clause_number == num);
+          if (matched) openClauseInspector(matched);
+        }
+      });
+    });
 
   } catch (err) {
     thinkingNode.remove();
-    appendMessage("agent", `<span style="color: var(--status-danger);">Error querying document QA endpoint.</span>`);
+    appendMessage("agent", `<span style="color: var(--status-danger);">Error querying document QA endpoint. Please check your connection.</span>`);
+    showToast("QA query failed", "danger");
   }
 }
 
@@ -465,20 +709,35 @@ function appendMessage(role, html) {
   div.innerHTML = html;
   qaMessages.appendChild(div);
   qaMessages.scrollTop = qaMessages.scrollHeight;
+  return div;
 }
 
-// Compare Documents Handler
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// ─── Compare Documents Handler ─────────────────────────────────────────────
 btnRunCompare.addEventListener("click", async () => {
   const doc1 = compareDoc1.value;
   const doc2 = compareDoc2.value;
 
+  if (!doc1 || !doc2) {
+    showToast("Please select two documents to compare.", "warning");
+    return;
+  }
+
   if (doc1 === doc2) {
-    alert("Please select two different documents to compare.");
+    showToast("Please select two different documents to compare.", "warning");
     return;
   }
 
   const container = document.getElementById("diffResultsContainer");
-  container.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Aligning clauses and calculating semantic shift...</p>`;
+  container.innerHTML = `
+    <div style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+      <div class="typing-dots" style="margin-bottom: 0.5rem;"><span></span><span></span><span></span></div>
+      <p>Aligning clauses and calculating semantic shift...</p>
+    </div>
+  `;
 
   try {
     const res = await fetch("/api/documents/compare", {
@@ -498,22 +757,26 @@ btnRunCompare.addEventListener("click", async () => {
 
     let html = "";
 
-    // 1. Materially Modified Clauses (with Semantic Shifts)
+    // 1. Materially Modified Clauses
     if (modifiedList.length > 0) {
-      html += `<div class="diff-bucket modified"><h3 style="color: #FBBF24; margin-bottom: 0.8rem;">Δ Materially Changed Provisions</h3>`;
+      html += `<div class="diff-bucket modified"><h3 style="color: #FBBF24; margin-bottom: 1rem; font-size: 1.05rem;">Δ Materially Changed Provisions (${modifiedList.length})</h3>`;
       modifiedList.forEach(m => {
         html += `
-          <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
-            <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem;">
+          <div class="diff-box-inner">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 0.6rem;">
               <span>Clause ${m.clause_number_a || "§"} ➔ ${m.clause_number_b || "§"} (${m.title_b || m.title_a})</span>
               <span class="badge badge-warning">Similarity: ${(m.similarity_score * 100).toFixed(0)}%</span>
             </div>
-            <div style="padding: 0.5rem 0.75rem; background: rgba(245, 158, 11, 0.12); border-left: 3px solid #F59E0B; margin-bottom: 0.6rem; font-size: 0.85rem; color: #FDE68A;">
-              <strong>Semantic Shift Summary:</strong> ${m.semantic_change_summary || "Material wording or timeline modification."}
+            <div style="padding: 0.6rem 0.85rem; background: rgba(245, 158, 11, 0.12); border-left: 3px solid #F59E0B; margin-bottom: 0.75rem; font-size: 0.86rem; color: #FDE68A; border-radius: 4px;">
+              <strong>Semantic Shift:</strong> ${m.semantic_change_summary || "Material wording or timeline modification."}
             </div>
-            <div class="layout-split" style="font-size: 0.8rem;">
-              <div style="color: #F87171;"><strong>v1 Original:</strong> "${m.text_a}"</div>
-              <div style="color: #34D399;"><strong>v2 Revision:</strong> "${m.text_b}"</div>
+            <div class="layout-split" style="font-size: 0.84rem;">
+              <div style="color: #F87171; background: rgba(244, 63, 94, 0.05); padding: 0.75rem; border-radius: 6px;">
+                <strong>v1 Original:</strong> "${m.text_a}"
+              </div>
+              <div style="color: #34D399; background: rgba(16, 185, 129, 0.05); padding: 0.75rem; border-radius: 6px;">
+                <strong>v2 Revision:</strong> "${m.text_b}"
+              </div>
             </div>
           </div>
         `;
@@ -523,12 +786,12 @@ btnRunCompare.addEventListener("click", async () => {
 
     // 2. Added Clauses
     if (addedList.length > 0) {
-      html += `<div class="diff-bucket added"><h3 style="color: var(--status-success); margin-bottom: 0.8rem;">+ Added Provisions (Present in v2 only)</h3>`;
+      html += `<div class="diff-bucket added"><h3 style="color: var(--status-success); margin-bottom: 1rem; font-size: 1.05rem;">+ Added Provisions (Present in v2 only) (${addedList.length})</h3>`;
       addedList.forEach(c => {
         html += `
-          <div style="background: rgba(0,0,0,0.3); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem;">
-            <div style="font-weight: 600; font-size: 0.9rem; color: #34D399;">Clause ${c.clause_number_b}: ${c.title_b}</div>
-            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;">${c.text_b}</p>
+          <div class="diff-box-inner">
+            <div style="font-weight: 700; font-size: 0.92rem; color: #34D399;">Clause ${c.clause_number_b}: ${c.title_b}</div>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.5;">${c.text_b}</p>
           </div>
         `;
       });
@@ -537,30 +800,32 @@ btnRunCompare.addEventListener("click", async () => {
 
     // 3. Removed Clauses
     if (removedList.length > 0) {
-      html += `<div class="diff-bucket removed"><h3 style="color: var(--status-danger); margin-bottom: 0.8rem;">- Removed Provisions (Omitted in v2)</h3>`;
+      html += `<div class="diff-bucket removed"><h3 style="color: var(--status-danger); margin-bottom: 1rem; font-size: 1.05rem;">- Removed Provisions (Omitted in v2) (${removedList.length})</h3>`;
       removedList.forEach(c => {
         html += `
-          <div style="background: rgba(0,0,0,0.3); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem;">
-            <div style="font-weight: 600; font-size: 0.9rem; color: #F87171;">Clause ${c.clause_number_a}: ${c.title_a}</div>
-            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;">${c.text_a}</p>
+          <div class="diff-box-inner">
+            <div style="font-weight: 700; font-size: 0.92rem; color: #F87171;">Clause ${c.clause_number_a}: ${c.title_a}</div>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.5;">${c.text_a}</p>
           </div>
         `;
       });
       html += `</div>`;
     }
 
-    container.innerHTML = html || `<p style="color: var(--status-success); text-align: center;">Documents are identical with no material deviations.</p>`;
+    container.innerHTML = html || `<p style="color: var(--status-success); text-align: center; padding: 2.5rem;">Both documents are structurally and semantically identical.</p>`;
+    showToast("Semantic comparison complete", "success");
 
   } catch (err) {
-    container.innerHTML = `<p style="color: var(--status-danger);">Failed to execute semantic comparison.</p>`;
+    container.innerHTML = `<p style="color: var(--status-danger); text-align: center; padding: 2rem;">Failed to execute semantic comparison.</p>`;
+    showToast("Semantic comparison failed", "danger");
   }
 });
 
-// Actionable 1: Deadlines
+// ─── Actionable 1: Deadlines ───────────────────────────────────────────────
 async function loadDeadlines() {
   const baseDate = document.getElementById("effectiveDateInput").value || "2026-10-01";
   const container = document.getElementById("deadlinesTimeline");
-  container.innerHTML = `<p style="color: var(--text-muted);">Extracting obligations timeline...</p>`;
+  container.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem;">Extracting obligations timeline...</p>`;
 
   try {
     const res = await fetch(`/api/documents/${currentDocId}/actionable/deadlines?effective_date=${baseDate}`);
@@ -568,7 +833,7 @@ async function loadDeadlines() {
 
     container.innerHTML = "";
     if (!data.deadlines || data.deadlines.length === 0) {
-      container.innerHTML = `<p style="color: var(--text-muted); padding: 1rem;">No time-bound deadlines detected in this document.</p>`;
+      container.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem;">No time-bound deadlines detected in this document.</p>`;
       return;
     }
 
@@ -577,18 +842,20 @@ async function loadDeadlines() {
       item.className = "timeline-item";
       item.innerHTML = `
         <div class="timeline-dot"></div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-          <span style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-primary); font-size: 0.95rem;">${dl.resolved_date || 'Relative'}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <span style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-primary); font-size: 0.95rem;">${dl.resolved_date || 'Relative Date'}</span>
           <span class="badge badge-info">${(dl.party || 'PARTY').toUpperCase()}</span>
         </div>
-        <h4 style="font-size: 0.95rem; margin-bottom: 0.25rem;">Clause ${dl.clause_number}: ${dl.obligation}</h4>
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">Trigger: ${dl.trigger} (${dl.relative_days} days offset)</div>
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.3rem; color: var(--text-primary);">Clause ${dl.clause_number}: ${dl.obligation}</h4>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.45rem;">
+          <strong>Trigger:</strong> ${dl.trigger} (${dl.relative_days} days offset)
+        </div>
       `;
       container.appendChild(item);
     });
 
   } catch (err) {
-    container.innerHTML = `<p style="color: var(--status-danger);">Failed to load deadlines.</p>`;
+    container.innerHTML = `<p style="color: var(--status-danger); padding: 1rem;">Failed to load deadlines.</p>`;
   }
 }
 
@@ -596,12 +863,13 @@ async function loadDeadlines() {
 document.getElementById("btnExportIcs").addEventListener("click", () => {
   const baseDate = document.getElementById("effectiveDateInput").value || "2026-10-01";
   window.open(`/api/documents/${currentDocId}/actionable/deadlines/ics?effective_date=${baseDate}`, "_blank");
+  showToast("Downloading .ics calendar schedule", "info");
 });
 
-// Actionable 2: Lawyer-Prep
+// ─── Actionable 2: Lawyer-Prep ─────────────────────────────────────────────
 async function loadLawyerPrep() {
   const container = document.getElementById("lawyerPrepContent");
-  container.innerHTML = `<p style="color: var(--text-muted);">Compiling Lawyer Consultation Brief...</p>`;
+  container.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem;">Compiling Lawyer Consultation Brief...</p>`;
 
   try {
     const res = await fetch(`/api/documents/${currentDocId}/actionable/lawyer-prep`);
@@ -620,20 +888,20 @@ async function loadLawyerPrep() {
     const questions = pack.prioritized_questions || [];
 
     let html = `
-      <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem;">
-        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-primary);">1. Executive Document Summary</h3>
-        <div style="font-size: 0.88rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.3rem;">
+      <div style="background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.35rem; border: 1px solid var(--border-subtle);">
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.6rem; color: var(--accent-primary);">1. Executive Document Summary</h3>
+        <div style="font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.4rem;">
           ${factsHtml}
         </div>
       </div>
 
-      <div style="margin-bottom: 1.25rem;">
-        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: #F59E0B;">2. Document Integrity Audit Checklist</h3>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+      <div style="margin-bottom: 1.35rem;">
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.6rem; color: #F59E0B;">2. Document Integrity Audit Checklist</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.55rem;">
           ${checklist.map(item => `
-            <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; padding: 0.5rem 0.8rem; background: rgba(255,255,255,0.02); border-radius: 6px;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; padding: 0.6rem 0.9rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
               <span>${item.status === 'pass' || item.passed ? "✅" : "⚠️"}</span>
-              <span style="font-weight: 600; min-width: 160px;">${item.name || item.item || "Check"}:</span>
+              <span style="font-weight: 600; min-width: 170px; color: var(--text-primary);">${item.name || item.item || "Check"}:</span>
               <span style="color: var(--text-secondary);">${item.notes || item.status || ""}</span>
             </div>
           `).join("")}
@@ -641,16 +909,16 @@ async function loadLawyerPrep() {
       </div>
 
       <div>
-        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--status-danger);">3. Prioritized Questions for Counsel</h3>
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.6rem; color: var(--status-danger);">3. Prioritized Questions for Counsel</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
           ${questions.map((q, idx) => `
-            <div style="background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 0.85rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+            <div style="background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: var(--radius-md); padding: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                 <span class="badge ${q.priority === 'critical' ? 'badge-danger' : 'badge-warning'}">Priority: ${(q.priority || 'MEDIUM').toUpperCase()}</span>
                 <span class="node-number">Target: Clause ${q.clause_number || q.clause_id}</span>
               </div>
-              <p style="font-size: 0.9rem; font-weight: 600; color: white;">"${q.question}"</p>
-              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Context: ${q.context_reason || q.rationale || ""}</p>
+              <p style="font-size: 0.92rem; font-weight: 600; color: #FFFFFF; margin-bottom: 0.3rem;">"${q.question}"</p>
+              <p style="font-size: 0.82rem; color: var(--text-secondary);">Context: ${q.context_reason || q.rationale || ""}</p>
             </div>
           `).join("")}
         </div>
@@ -660,11 +928,11 @@ async function loadLawyerPrep() {
     container.innerHTML = html;
 
   } catch (err) {
-    container.innerHTML = `<p style="color: var(--status-danger);">Failed to load lawyer prep pack.</p>`;
+    container.innerHTML = `<p style="color: var(--status-danger); padding: 1rem;">Failed to compile lawyer consultation pack.</p>`;
   }
 }
 
-// Actionable 3: Plain-Language Rewrites & Indic Translations
+// ─── Actionable 3: Plain-Language Rewrites & Translations ──────────────────
 document.querySelectorAll("#subpane-rewriter .btn-secondary[data-lang]").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#subpane-rewriter .btn-secondary[data-lang]").forEach(b => b.classList.remove("active-lang"));
@@ -683,7 +951,7 @@ document.querySelectorAll("input[name='rwLevel']").forEach(radio => {
 
 async function loadRewrites() {
   const container = document.getElementById("rewriterCardsContainer");
-  container.innerHTML = `<p style="color: var(--text-muted);">Generating plain-language translations (${currentLang.toUpperCase()})...</p>`;
+  container.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem;">Generating plain-language translations (${currentLang.toUpperCase()})...</p>`;
 
   try {
     const res = await fetch(`/api/documents/${currentDocId}/actionable/rewrite`, {
@@ -697,33 +965,33 @@ async function loadRewrites() {
     const simplified = data.clauses_simplified || data.simplified_clauses || [];
     simplified.forEach(sc => {
       const card = document.createElement("div");
-      card.style.background = "rgba(0,0,0,0.3)";
+      card.style.background = "rgba(14, 21, 38, 0.7)";
       card.style.border = "1px solid var(--border-subtle)";
-      card.style.borderRadius = "8px";
-      card.style.padding = "1rem";
+      card.style.borderRadius = "var(--radius-md)";
+      card.style.padding = "1.2rem";
       card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
           <span class="node-number">Clause ${sc.clause_number}: ${sc.title || ''}</span>
           <span class="badge badge-info">${data.language.toUpperCase()} · ${data.level ? data.level.toUpperCase() : ''}</span>
         </div>
-        <p style="font-size: 0.92rem; color: #F8FAFC; margin-bottom: 0.5rem; line-height: 1.6;">${sc.simplified_text}</p>
-        <details style="font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-          <summary>View Original Legalese</summary>
-          <p style="margin-top: 0.3rem; padding: 0.4rem; background: rgba(255,255,255,0.02); border-radius: 4px;">${sc.original_text}</p>
+        <p style="font-size: 0.94rem; color: #F8FAFC; margin-bottom: 0.75rem; line-height: 1.65;">${sc.simplified_text}</p>
+        <details style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer;">
+          <summary style="font-weight: 600;">View Original Legalese</summary>
+          <p style="margin-top: 0.4rem; padding: 0.6rem; background: rgba(0,0,0,0.3); border-radius: var(--radius-xs); color: var(--text-secondary); line-height: 1.5;">${sc.original_text}</p>
         </details>
       `;
       container.appendChild(card);
     });
 
   } catch (err) {
-    container.innerHTML = `<p style="color: var(--status-danger);">Failed to load rewrites.</p>`;
+    container.innerHTML = `<p style="color: var(--status-danger); padding: 1rem;">Failed to load rewrites.</p>`;
   }
 }
 
-// Actionable 4: Negotiations
+// ─── Actionable 4: Negotiations ────────────────────────────────────────────
 async function loadNegotiations() {
   const container = document.getElementById("negotiationCardsContainer");
-  container.innerHTML = `<p style="color: var(--text-muted);">Generating balanced negotiation counter-proposals...</p>`;
+  container.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem;">Generating balanced negotiation counter-proposals...</p>`;
 
   try {
     const res = await fetch(`/api/documents/${currentDocId}/actionable/negotiations`);
@@ -731,7 +999,7 @@ async function loadNegotiations() {
 
     container.innerHTML = "";
     if (proposals.length === 0) {
-      container.innerHTML = `<p style="color: var(--status-success); padding: 1rem;">No aggressive or one-sided terms found requiring counter-proposals.</p>`;
+      container.innerHTML = `<p style="color: var(--status-success); padding: 1.5rem; text-align: center;">No aggressive or one-sided terms found requiring counter-proposals.</p>`;
       return;
     }
 
@@ -739,38 +1007,52 @@ async function loadNegotiations() {
       const card = document.createElement("div");
       card.style.background = "rgba(245, 158, 11, 0.05)";
       card.style.border = "1px solid rgba(245, 158, 11, 0.25)";
-      card.style.borderRadius = "8px";
-      card.style.padding = "1.1rem";
+      card.style.borderRadius = "var(--radius-md)";
+      card.style.padding = "1.25rem";
       card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
           <span class="node-number">Clause ${p.clause_number} (${p.category.toUpperCase()})</span>
-          <span class="badge badge-warning">Counter-Proposal</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge badge-warning">Counter-Proposal</span>
+            <button class="btn-copy-proposal btn-secondary" style="padding: 2px 7px; font-size: 0.74rem;">Copy</button>
+          </div>
         </div>
-        <div style="font-size: 0.85rem; color: #F87171; margin-bottom: 0.6rem;">
+        <div style="font-size: 0.86rem; color: #F87171; margin-bottom: 0.75rem; line-height: 1.5;">
           <strong>Original Aggressive Provision:</strong> "${p.original_text}"
         </div>
-        <div style="font-size: 0.9rem; color: #34D399; background: rgba(16, 185, 129, 0.1); padding: 0.75rem; border-radius: 6px; border-left: 3px solid #10B981; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.92rem; color: #34D399; background: rgba(16, 185, 129, 0.1); padding: 0.85rem; border-radius: var(--radius-sm); border-left: 3px solid #10B981; margin-bottom: 0.6rem; line-height: 1.6;">
           <strong>Proposed Balanced Alternative:</strong> "${p.proposed_alternative_text || p.proposed_alternative}"
         </div>
-        <div style="font-size: 0.8rem; color: var(--text-secondary);">
+        <div style="font-size: 0.82rem; color: var(--text-secondary);">
           <strong>One-Line Rationale:</strong> ${p.one_line_rationale || p.rationale}
         </div>
       `;
+
+      card.querySelector(".btn-copy-proposal").addEventListener("click", () => {
+        const text = p.proposed_alternative_text || p.proposed_alternative;
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("Copied negotiation proposal to clipboard", "success");
+        });
+      });
+
       container.appendChild(card);
     });
 
   } catch (err) {
-    container.innerHTML = `<p style="color: var(--status-danger);">Failed to load negotiation proposals.</p>`;
+    container.innerHTML = `<p style="color: var(--status-danger); padding: 1rem;">Failed to load negotiation proposals.</p>`;
   }
 }
 
-// Switch Document Listener
+// ─── Switch Document Listener ──────────────────────────────────────────────
 docSelector.addEventListener("change", (e) => {
   const selected = e.target.value;
-  if (selected) loadDocument(selected);
+  if (selected) {
+    loadDocument(selected);
+    showToast(`Switched active document to ${docSelector.options[docSelector.selectedIndex].text}`, "info");
+  }
 });
 
-// Upload Modal Logic
+// ─── Upload Modal Logic ────────────────────────────────────────────────────
 const uploadModal = document.getElementById("uploadModal");
 const btnOpenUpload = document.getElementById("btnOpenUpload");
 const btnCloseUpload = document.getElementById("btnCloseUpload");
@@ -781,11 +1063,13 @@ const uploadStatus = document.getElementById("uploadStatus");
 
 btnOpenUpload.addEventListener("click", () => {
   uploadModal.classList.add("open");
+  uploadModal.setAttribute("aria-hidden", "false");
   uploadStatus.textContent = "";
 });
 
 btnCloseUpload.addEventListener("click", () => {
   uploadModal.classList.remove("open");
+  uploadModal.setAttribute("aria-hidden", "true");
 });
 
 btnChooseFile.addEventListener("click", () => fileInput.click());
@@ -808,7 +1092,7 @@ dropzone.addEventListener("drop", (e) => {
 });
 
 async function uploadFile(file) {
-  uploadStatus.innerHTML = `<em>Uploading and parsing "${file.name}" through pipeline...</em>`;
+  uploadStatus.innerHTML = `<em>Uploading and analyzing "${file.name}"...</em>`;
   const formData = new FormData();
   formData.append("file", file);
 
@@ -821,24 +1105,36 @@ async function uploadFile(file) {
     if (!res.ok) {
       const err = await res.json();
       uploadStatus.innerHTML = `<span style="color: var(--status-danger);">Upload failed: ${err.detail || 'Error'}</span>`;
+      showToast(`Upload failed: ${err.detail || 'Error'}`, "danger");
       return;
     }
 
     const data = await res.json();
     uploadStatus.innerHTML = `<span style="color: var(--status-success);">Success! Ingested ${data.document.clauses.length} clauses.</span>`;
-    
-    // Refresh doc list and select uploaded doc
+    showToast(`Successfully analyzed "${file.name}"`, "success");
+
     setTimeout(async () => {
       uploadModal.classList.remove("open");
+      uploadModal.setAttribute("aria-hidden", "true");
       await initApp();
       docSelector.value = data.document.id;
       loadDocument(data.document.id);
-    }, 1000);
+    }, 800);
 
   } catch (err) {
     uploadStatus.innerHTML = `<span style="color: var(--status-danger);">Network or server error during upload.</span>`;
+    showToast("Upload network error", "danger");
   }
 }
+
+// ─── Global Keyboard Shortcuts ─────────────────────────────────────────────
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeClauseInspector();
+    uploadModal.classList.remove("open");
+    uploadModal.setAttribute("aria-hidden", "true");
+  }
+});
 
 // Run init on DOM ready
 document.addEventListener("DOMContentLoaded", initApp);

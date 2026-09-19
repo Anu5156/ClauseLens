@@ -1,57 +1,78 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClauseLens â€” Advanced Legal Document Intelligence Engine</title>
-  <meta name="description" content="Hierarchical clause tree analysis, cross-reference graphs, perspective risk modeling, and grounded QA for legal documents.">
+  <title>ClauseLens — Legal Document Intelligence Studio</title>
+  <meta name="description" content="Precision clause tree analysis, cross-reference integrity graphs, perspective risk modeling, and grounded QA for legal contracts.">
   <link rel="stylesheet" href="/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>âš–ï¸</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%236366F1%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z%22/><path d=%22m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z%22/><path d=%22M7 21h10%22/><path d=%22M12 3v18%22/><path d=%22M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2%22/></svg>">
 </head>
 <body>
-  <!-- Skip Navigation for keyboard users -->
+  <!-- Skip Navigation -->
   <a href="#main-content" class="skip-nav">Skip to main content</a>
+
   <div class="app-container">
     <!-- Top Executive Header -->
     <header class="app-header">
       <div class="brand-section">
-        <div class="brand-icon">âš–ï¸</div>
-        <div>
-          <span class="brand-title">ClauseLens</span>
-          <span class="brand-tag">Intelligence Studio</span>
+        <div class="brand-icon-box">
+          <svg viewBox="0 0 24 24">
+            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="M7 21h10"/>
+            <path d="M12 3v18"/>
+            <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
+          </svg>
+        </div>
+        <div class="brand-meta">
+          <div class="brand-title-wrap">
+            <span class="brand-title">ClauseLens</span>
+            <span class="brand-tag">Intelligence Studio</span>
+          </div>
+          <div class="brand-status-indicator">
+            <span class="pulse-dot"></span>
+            <span>Neural Engine Active · v1.0</span>
+          </div>
         </div>
       </div>
 
       <div class="header-controls">
         <div class="selector-group">
           <span class="selector-label">Active Document:</span>
-          <select id="docSelector" class="doc-select">
+          <select id="docSelector" class="doc-select" aria-label="Select active contract document">
             <option value="">Loading contracts...</option>
           </select>
         </div>
 
-        <button id="btnOpenUpload" class="btn-primary">
-          <span>+</span> Upload Contract
+        <button id="btnOpenUpload" class="btn-primary" aria-label="Upload contract">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <span>Upload Contract</span>
         </button>
       </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <nav class="app-tabs" role="tablist" aria-label="Document analysis sections">
+    <nav class="app-tabs" role="tablist" aria-label="Document intelligence sections">
       <button class="tab-btn active" data-tab="structure" role="tab" aria-selected="true" aria-controls="pane-structure" id="tab-structure">
-        <span>ðŸ“„</span> Structure & Tree
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Structure & Tree</span>
       </button>
       <button class="tab-btn" data-tab="risk" role="tab" aria-selected="false" aria-controls="pane-risk" id="tab-risk">
-        <span>ðŸ›¡ï¸</span> Perspective Risk
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Perspective Risk</span>
       </button>
       <button class="tab-btn" data-tab="qa" role="tab" aria-selected="false" aria-controls="pane-qa" id="tab-qa">
-        <span>ðŸ’¬</span> Grounded QA Studio
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Grounded QA Studio</span>
       </button>
       <button class="tab-btn" data-tab="compare" role="tab" aria-selected="false" aria-controls="pane-compare" id="tab-compare">
-        <span>âš–ï¸</span> Semantic Diff
+        <svg viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+        <span>Semantic Diff</span>
       </button>
       <button class="tab-btn" data-tab="actionable" role="tab" aria-selected="false" aria-controls="pane-actionable" id="tab-actionable">
-        <span>âš¡</span> Actionable Hub
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Actionable Hub</span>
       </button>
     </nav>
 
@@ -60,28 +81,36 @@
       <!-- Top Stat Bar -->
       <section class="profile-banner" aria-label="Document statistics">
         <div class="stat-card">
-          <div class="stat-icon" aria-hidden="true">ðŸ“„</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
           <div class="stat-data">
             <span class="stat-label" id="label-doctype">Doc Classification</span>
             <span id="statDocType" class="stat-value" aria-labelledby="label-doctype" aria-live="polite">-</span>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" aria-hidden="true">ðŸŒ³</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
           <div class="stat-data">
             <span class="stat-label" id="label-clauses">Total Clauses</span>
             <span id="statClauseCount" class="stat-value" aria-labelledby="label-clauses" aria-live="polite">0</span>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" aria-hidden="true">ðŸ”—</div>
+          <div class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
           <div class="stat-data">
             <span class="stat-label" id="label-crossrefs">Cross-References</span>
             <span id="statCrossrefCount" class="stat-value" aria-labelledby="label-crossrefs" aria-live="polite">0</span>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" aria-hidden="true">âš ï¸</div>
+          <div class="stat-icon" aria-hidden="true" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(244, 63, 94, 0.08);">
+            <svg viewBox="0 0 24 24" style="stroke: var(--status-danger);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
           <div class="stat-data">
             <span class="stat-label" id="label-defects">Detected Flaws</span>
             <span id="statDefectCount" class="stat-value" aria-labelledby="label-defects" aria-live="polite" style="color: var(--status-danger);">0</span>
@@ -94,21 +123,43 @@
         <!-- Missing Clause Template Audit -->
         <div class="glass-card" style="margin-bottom: 1.5rem;">
           <div class="card-header">
-            <h2 class="card-title"><span>ðŸ“‹</span> Standard Contract Template Compliance Profile</h2>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <span>Standard Contract Template Compliance Profile</span>
+            </h2>
             <span id="profileStatusBadge" class="badge badge-info">Auditing...</span>
           </div>
-          <div id="missingClauseAuditContent" style="font-size: 0.88rem; color: var(--text-secondary);">
+          <div id="missingClauseAuditContent" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
             Loading template taxonomy checks...
           </div>
         </div>
 
         <div class="layout-split">
-          <!-- Left: Clause Hierarchy Tree -->
+          <!-- Left: Clause Hierarchy Tree with Search & Filters -->
           <div class="glass-card">
             <div class="card-header">
-              <h2 class="card-title"><span>ðŸŒ³</span> Hierarchical Clause Tree</h2>
+              <h2 class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 6-6"/></svg>
+                <span>Hierarchical Clause Tree</span>
+              </h2>
               <span class="badge badge-info" id="treeClauseTotal">0 Clauses</span>
             </div>
+
+            <!-- Toolbar: Live Search & Category Filters -->
+            <div class="tree-toolbar">
+              <div class="tree-search-box">
+                <svg class="tree-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="Search clauses by keyword, section, or term..." autocomplete="off">
+              </div>
+              <div class="tree-filter-pills" id="treeCategoryFilters">
+                <button class="filter-chip active" data-category="ALL">All</button>
+                <button class="filter-chip" data-category="GOVERNANCE">Governance</button>
+                <button class="filter-chip" data-category="FINANCIAL">Financial</button>
+                <button class="filter-chip" data-category="LIABILITY">Liability</button>
+                <button class="filter-chip" data-category="TERMINATION">Termination</button>
+              </div>
+            </div>
+
             <div id="clauseTreeContainer" class="tree-container">
               <!-- Rendered dynamically -->
             </div>
@@ -119,10 +170,13 @@
             <!-- Defects Card -->
             <div class="glass-card">
               <div class="card-header">
-                <h2 class="card-title"><span>âš ï¸</span> Structural Defects & Dangling References</h2>
+                <h2 class="card-title">
+                  <svg viewBox="0 0 24 24" style="stroke: var(--status-danger);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span>Structural Defects & Dangling References</span>
+                </h2>
                 <span class="badge badge-danger" id="defectCountBadge">0 Caught</span>
               </div>
-              <div id="defectsList" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto;">
+              <div id="defectsList" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 290px; overflow-y: auto;">
                 <!-- Rendered dynamically -->
               </div>
             </div>
@@ -130,10 +184,13 @@
             <!-- Definitions Card -->
             <div class="glass-card">
               <div class="card-header">
-                <h2 class="card-title"><span>ðŸ“–</span> Defined Terms Registry</h2>
+                <h2 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  <span>Defined Terms Registry</span>
+                </h2>
                 <span class="badge badge-info" id="definitionCountBadge">0 Terms</span>
               </div>
-              <div id="definitionsList" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 280px; overflow-y: auto;">
+              <div id="definitionsList" style="display: flex; flex-direction: column; gap: 0.65rem; max-height: 290px; overflow-y: auto;">
                 <!-- Rendered dynamically -->
               </div>
             </div>
@@ -141,23 +198,27 @@
         </div>
       </div>
 
-      <!-- =========================================================================
-           TAB 2: PERSPECTIVE RISK ANALYZER
-           ========================================================================= -->
-      <div id="pane-risk" class="tab-pane">
+      <!-- TAB 2: PERSPECTIVE RISK ANALYZER -->
+      <div id="pane-risk" class="tab-pane" role="tabpanel" aria-labelledby="tab-risk">
         <!-- Party Perspective Selector -->
         <div class="perspective-bar">
-          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">EVALUATE PERSPECTIVE:</span>
-          <div id="perspectiveButtons" style="display: flex; gap: 0.5rem;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">EVALUATE PERSPECTIVE:</span>
+          <div id="perspectiveButtons" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
             <!-- Rendered based on document type (Tenant/Landlord, Customer/Vendor, etc.) -->
           </div>
         </div>
 
-        <!-- Risk Gauge & Summary -->
+        <!-- High-Tech SVG Circular Risk Gauge & Summary -->
         <div class="risk-meter-box">
-          <div id="riskGaugeCircle" class="risk-circle">
-            <span id="riskScoreValue" class="risk-circle-num">--</span>
-            <span class="risk-circle-label">OUT OF 100</span>
+          <div class="risk-gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 140 140">
+              <circle class="gauge-bg" cx="70" cy="70" r="60"/>
+              <circle id="riskGaugeProgress" class="gauge-progress" cx="70" cy="70" r="60"/>
+            </svg>
+            <div class="gauge-inner-data">
+              <span id="riskScoreValue" class="risk-circle-num">--</span>
+              <span class="risk-circle-label">OUT OF 100</span>
+            </div>
           </div>
           <div class="risk-summary-text">
             <h3 id="riskTierTitle">Calculating Perspective Risk...</h3>
@@ -168,7 +229,10 @@
         <!-- Risk Items List -->
         <div class="glass-card">
           <div class="card-header">
-            <h2 class="card-title"><span>ðŸ›¡ï¸</span> Clause Deviation & Exposure Breakdown</h2>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Clause Deviation & Exposure Breakdown</span>
+            </h2>
             <span class="badge badge-warning" id="riskItemsCountBadge">0 Assessed</span>
           </div>
           <div id="riskItemsList">
@@ -177,52 +241,62 @@
         </div>
       </div>
 
-      <!-- =========================================================================
-           TAB 3: GROUNDED QA STUDIO
-           ========================================================================= -->
-      <div id="pane-qa" class="tab-pane">
+      <!-- TAB 3: GROUNDED QA STUDIO -->
+      <div id="pane-qa" class="tab-pane" role="tabpanel" aria-labelledby="tab-qa">
         <div class="qa-studio">
           <!-- Suggested Prompts -->
           <div class="suggested-queries">
-            <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center; font-weight: 600;">TEST BENCHMARKS:</span>
-            <button class="query-chip" data-q="What is the security deposit amount?">ðŸ” In-Scope: Security Deposit</button>
-            <button class="query-chip" data-q="What is the notice period for terminating the contract?">ðŸ” In-Scope: Notice Period</button>
-            <button class="query-chip" data-q="Can I pay rent using Bitcoin or cryptocurrency?">ðŸš« Adversarial: Cryptocurrency</button>
-            <button class="query-chip" data-q="Should I sign this contract and will I win if I sue?">ðŸ›¡ï¸ Guardrail: Legal Advice</button>
+            <span style="font-size: 0.74rem; color: var(--text-muted); align-self: center; font-weight: 700; letter-spacing: 0.04em;">QUICK PROMPTS:</span>
+            <button class="query-chip" data-q="What is the security deposit amount and refund terms?">Security Deposit & Refund</button>
+            <button class="query-chip" data-q="What is the notice period for terminating the contract?">Termination Notice Period</button>
+            <button class="query-chip" data-q="Can I pay rent or fees using Bitcoin or cryptocurrency?">Cryptocurrency Payment</button>
+            <button class="query-chip" data-q="Should I sign this contract and will I win if I sue?">Legal Advice & Lawsuit</button>
           </div>
 
           <!-- Chat Messages Area -->
           <div id="qaMessages" class="qa-messages">
             <div class="message-card agent">
-              <strong>ClauseLens Grounded Intelligence Assistant</strong><br>
-              Ask any question regarding provisions, terms, or obligations in the active document. All answers are grounded strictly in contract clauses with exact span citations and bounding box coordinates.
+              <div class="agent-meta-header">
+                <span>ClauseLens Grounded Intelligence Assistant</span>
+              </div>
+              <p>Welcome. Ask any question regarding provisions, obligations, liabilities, or deadlines in the active contract. All responses are strictly grounded with verbatim clauses and bounding box page coordinates.</p>
             </div>
           </div>
 
           <!-- QA Input Bar -->
           <form id="qaForm" class="qa-input-bar">
-            <input type="text" id="qaInput" class="qa-input" placeholder="Ask a question regarding the active document (e.g., 'What are the payment deadlines?')..." autocomplete="off">
-            <button type="submit" class="btn-primary"><span>Ask</span></button>
+            <input type="text" id="qaInput" class="qa-input" placeholder="Ask a grounded question about this contract (e.g., 'What are the breach cure periods?')..." autocomplete="off">
+            <button type="submit" class="btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <span>Ask Engine</span>
+            </button>
           </form>
         </div>
       </div>
 
-      <!-- =========================================================================
-           TAB 4: SEMANTIC DIFF & COMPARISON
-           ========================================================================= -->
-      <div id="pane-compare" class="tab-pane">
+      <!-- TAB 4: SEMANTIC DIFF & COMPARISON -->
+      <div id="pane-compare" class="tab-pane" role="tabpanel" aria-labelledby="tab-compare">
         <div class="glass-card" style="margin-bottom: 1.5rem;">
           <div class="card-header">
-            <h2 class="card-title"><span>âš–ï¸</span> Semantic Document Comparison & Alignment</h2>
-            <button id="btnRunCompare" class="btn-primary">Run Comparison</button>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+              <span>Semantic Document Comparison & Alignment</span>
+            </h2>
+            <div style="display: flex; gap: 0.6rem;">
+              <button id="btnSwapCompare" class="btn-secondary" title="Swap baseline and revised documents">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                <span>Swap</span>
+              </button>
+              <button id="btnRunCompare" class="btn-primary">Run Comparison</button>
+            </div>
           </div>
-          <div style="display: flex; gap: 1.5rem; align-items: center;">
-            <div class="selector-group" style="flex: 1;">
+          <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
+            <div class="selector-group" style="flex: 1; min-width: 260px;">
               <span class="selector-label">Baseline Document (v1):</span>
               <select id="compareDoc1" class="doc-select" style="width: 100%;"></select>
             </div>
-            <span style="font-weight: 700; color: var(--accent-primary);">VS</span>
-            <div class="selector-group" style="flex: 1;">
+            <span style="font-weight: 800; color: var(--accent-primary); font-size: 0.9rem;">VS</span>
+            <div class="selector-group" style="flex: 1; min-width: 260px;">
               <span class="selector-label">Revised Document (v2):</span>
               <select id="compareDoc2" class="doc-select" style="width: 100%;"></select>
             </div>
@@ -232,21 +306,27 @@
         <!-- Diff Stat Summary -->
         <div class="profile-banner">
           <div class="stat-card">
-            <div class="stat-icon" style="color: var(--status-success);">+</div>
+            <div class="stat-icon" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.08);">
+              <svg viewBox="0 0 24 24" style="stroke: var(--status-success);"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
             <div class="stat-data">
               <span class="stat-label">Added Clauses</span>
               <span id="statDiffAdded" class="stat-value" style="color: var(--status-success);">0</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon" style="color: var(--status-danger);">-</div>
+            <div class="stat-icon" style="color: var(--status-danger); border-color: rgba(244, 63, 94, 0.25); background: rgba(244, 63, 94, 0.08);">
+              <svg viewBox="0 0 24 24" style="stroke: var(--status-danger);"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
             <div class="stat-data">
               <span class="stat-label">Removed Clauses</span>
               <span id="statDiffRemoved" class="stat-value" style="color: var(--status-danger);">0</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon" style="color: var(--status-warning);">Î”</div>
+            <div class="stat-icon" style="color: var(--status-warning); border-color: rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.08);">
+              <svg viewBox="0 0 24 24" style="stroke: var(--status-warning);"><polygon points="12 2 2 22 22 22"/></svg>
+            </div>
             <div class="stat-data">
               <span class="stat-label">Materially Modified</span>
               <span id="statDiffModified" class="stat-value" style="color: var(--status-warning);">0</span>
@@ -256,30 +336,46 @@
 
         <!-- Diff Details Content -->
         <div id="diffResultsContainer">
-          <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Select two contract versions above and click "Run Comparison".</p>
+          <p style="color: var(--text-muted); text-align: center; padding: 2.5rem;">Select baseline and revised documents above and click "Run Comparison".</p>
         </div>
       </div>
 
-      <!-- =========================================================================
-           TAB 5: ACTIONABLE HUB
-           ========================================================================= -->
-      <div id="pane-actionable" class="tab-pane">
+      <!-- TAB 5: ACTIONABLE HUB -->
+      <div id="pane-actionable" class="tab-pane" role="tabpanel" aria-labelledby="tab-actionable">
         <!-- Action Subtabs -->
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-          <button class="role-pill active" data-action="deadlines">ðŸ“… Deadlines & .ics Export</button>
-          <button class="role-pill" data-action="lawyer-prep">ðŸ“‹ Lawyer-Prep Brief</button>
-          <button class="role-pill" data-action="rewriter">ðŸŒ Multilingual Rewrites</button>
-          <button class="role-pill" data-action="negotiate">ðŸ¤ Negotiation Counter-Proposals</button>
+        <div style="display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <button class="role-pill active" data-action="deadlines">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Deadlines & .ics</span>
+          </button>
+          <button class="role-pill" data-action="lawyer-prep">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Lawyer-Prep Brief</span>
+          </button>
+          <button class="role-pill" data-action="rewriter">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>Multilingual Rewrites</span>
+          </button>
+          <button class="role-pill" data-action="negotiate">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Negotiation Counter-Proposals</span>
+          </button>
         </div>
 
         <!-- Action 1: Deadlines -->
         <div id="subpane-deadlines" class="glass-card">
           <div class="card-header">
-            <h2 class="card-title"><span>ðŸ“…</span> Contract Timeline & Deadlines</h2>
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <label style="font-size: 0.8rem; color: var(--text-muted);">Effective Base Date:</label>
-              <input type="date" id="effectiveDateInput" value="2026-10-01" style="background: var(--bg-input); border: 1px solid var(--border-subtle); color: white; padding: 4px 8px; border-radius: 6px; font-family: var(--font-sans);">
-              <button id="btnExportIcs" class="btn-primary" style="font-size: 0.8rem;">Export .ics Calendar</button>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Contract Timeline & Deadlines</span>
+            </h2>
+            <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+              <label style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Effective Base Date:</label>
+              <input type="date" id="effectiveDateInput" value="2026-10-01" style="background: var(--bg-input); border: 1px solid var(--border-subtle); color: #FFFFFF; padding: 5px 10px; border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 0.84rem;">
+              <button id="btnExportIcs" class="btn-primary" style="font-size: 0.84rem; padding: 0.45rem 1rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export .ics Calendar</span>
+              </button>
             </div>
           </div>
           <div id="deadlinesTimeline" class="timeline">
@@ -290,7 +386,10 @@
         <!-- Action 2: Lawyer-Prep -->
         <div id="subpane-lawyer-prep" class="glass-card" style="display: none;">
           <div class="card-header">
-            <h2 class="card-title"><span>ðŸ“‹</span> Lawyer Consultation Preparation Pack</h2>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              <span>Lawyer Consultation Preparation Pack</span>
+            </h2>
             <span class="badge badge-info">Automated Audit</span>
           </div>
           <div id="lawyerPrepContent">
@@ -301,17 +400,24 @@
         <!-- Action 3: Rewrites & Translations -->
         <div id="subpane-rewriter" class="glass-card" style="display: none;">
           <div class="card-header">
-            <h2 class="card-title"><span>ðŸŒ</span> Plain-Language Simplification & Indic Translations</h2>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              <span>Plain-Language Simplification & Indic Translations</span>
+            </h2>
             <div style="display: flex; gap: 0.5rem;">
               <button class="btn-secondary active-lang" data-lang="en">English</button>
-              <button class="btn-secondary" data-lang="hi">à¤¹à¤¿à¤‚à¤¦à¥€ (Hindi)</button>
-              <button class="btn-secondary" data-lang="kn">à²•à²¨à³à²¨à²¡ (Kannada)</button>
+              <button class="btn-secondary" data-lang="hi">हिंदी (Hindi)</button>
+              <button class="btn-secondary" data-lang="kn">ಕನ್ನಡ (Kannada)</button>
             </div>
           </div>
-          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Reading Level:</span>
-            <label style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;"><input type="radio" name="rwLevel" value="plain_english" checked> Standard Plain English</label>
-            <label style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;"><input type="radio" name="rwLevel" value="simple"> 8th-Grade Simple (No Legal Jargon)</label>
+          <div style="display: flex; gap: 1.25rem; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap;">
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Reading Level:</span>
+            <label style="font-size: 0.86rem; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <input type="radio" name="rwLevel" value="plain_english" checked> Standard Plain English
+            </label>
+            <label style="font-size: 0.86rem; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <input type="radio" name="rwLevel" value="simple"> 8th-Grade Simple (No Legalese)
+            </label>
           </div>
           <div id="rewriterCardsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
             <!-- Rendered dynamically -->
@@ -321,7 +427,10 @@
         <!-- Action 4: Negotiations -->
         <div id="subpane-negotiate" class="glass-card" style="display: none;">
           <div class="card-header">
-            <h2 class="card-title"><span>ðŸ¤</span> Balanced Negotiation Alternatives</h2>
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/></svg>
+              <span>Balanced Negotiation Alternatives</span>
+            </h2>
             <span class="badge badge-warning">For Aggressive Clauses</span>
           </div>
           <div id="negotiationCardsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
@@ -331,26 +440,77 @@
       </div>
     </main>
 
+    <!-- Slide-over Clause Inspector Drawer -->
+    <div id="clauseDrawerOverlay" class="drawer-overlay"></div>
+    <aside id="clauseDrawer" class="clause-drawer" aria-label="Clause Inspector" aria-hidden="true">
+      <div class="drawer-header">
+        <div>
+          <span class="badge badge-info" id="drawerCategoryBadge">Category</span>
+          <h3 id="drawerClauseTitle" class="drawer-title" style="margin-top: 4px;">Clause Inspector</h3>
+        </div>
+        <button id="btnCloseDrawer" class="btn-icon" aria-label="Close clause inspector">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="drawer-content">
+        <div class="drawer-meta-grid">
+          <div class="drawer-meta-card">
+            <div class="drawer-meta-label">Clause Identifier</div>
+            <div id="drawerClauseNumber" class="drawer-meta-val">§ 1.0</div>
+          </div>
+          <div class="drawer-meta-card">
+            <div class="drawer-meta-label">Document Page & Span</div>
+            <div id="drawerPageSpan" class="drawer-meta-val">Pg 1 [0, 0, 0, 0]</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Full Verbatim Text</span>
+            <button id="btnCopyClauseText" class="btn-secondary" style="padding: 3px 8px; font-size: 0.76rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div id="drawerClauseText" class="drawer-text-box"></div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: auto;">
+          <button id="btnDrawerAskQA" class="btn-primary" style="flex: 1;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Query in QA Studio</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
     <!-- Upload Document Modal -->
-    <div id="uploadModal" class="modal-overlay">
+    <div id="uploadModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="uploadModalTitle">
       <div class="modal-box">
         <div class="card-header">
-          <h2 class="card-title">Upload Legal Document</h2>
-          <button id="btnCloseUpload" class="btn-secondary" style="padding: 2px 8px;">âœ•</button>
+          <h2 id="uploadModalTitle" class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Upload Legal Document</span>
+          </h2>
+          <button id="btnCloseUpload" class="btn-icon" aria-label="Close modal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div id="dropzone" class="dropzone">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">ðŸ“„</div>
-          <p style="font-weight: 600; margin-bottom: 0.25rem;">Drag & drop contract file here</p>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Supports PDF or DOCX</p>
+          <svg class="dropzone-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <p style="font-weight: 700; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-primary);">Drag & drop contract file here</p>
+          <p style="font-size: 0.84rem; color: var(--text-muted);">Supports PDF or DOCX (up to 25 MB)</p>
           <input type="file" id="fileInput" accept=".pdf,.docx,.doc" style="display: none;">
-          <button id="btnChooseFile" class="btn-secondary" style="margin-top: 1rem;">Browse Files</button>
+          <button id="btnChooseFile" class="btn-secondary" style="margin-top: 1.25rem;">Browse Local Files</button>
         </div>
-        <div id="uploadStatus" style="margin-top: 1rem; font-size: 0.85rem; text-align: center; color: var(--text-muted);"></div>
+        <div id="uploadStatus" style="margin-top: 1.2rem; font-size: 0.88rem; text-align: center; color: var(--text-muted); min-height: 24px;"></div>
       </div>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" aria-live="polite"></div>
   </div>
 
   <script src="/app.js"></script>
 </body>
 </html>
-

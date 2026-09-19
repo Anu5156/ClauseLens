@@ -25,6 +25,39 @@
 
 ---
 
+## 🎯 Hackathon Submission: AI for Legal Assistance & Access
+
+### 1. Chosen Challenge Vertical
+* **Vertical:** **AI for Legal Assistance & Access**
+* **Problem Statement:** Legal contracts and information are notoriously dense, convoluted, and inaccessible for individuals, tenants, employees, and small businesses without costly professional legal assistance. **ClauseLens** democratizes contract comprehension by transforming flat documents into interactive, perspective-aware intelligence dashboards—delivering grounded clause navigation, semantic diffs, multilingual plain-language translations, and lawyer consultation briefings without ever overstepping into unauthorized legal advice.
+
+### 2. Pin-to-Pin Problem Statement Alignment
+| Challenge Required Use Case | ClauseLens Feature Implementation | Technical Module & UI Tab |
+| :--- | :--- | :--- |
+| **Simplifying complex legal documents** | Plain-Language Simplification (Standard & 8th-Grade Simple) + Indic Translations (**Hindi & Kannada**) | [`backend/actionable/rewriter.py`](file:///backend/actionable/rewriter.py) · *Actionable Hub* |
+| **Comparing contracts, agreements, or policies** | Semantic Bipartite Diff Engine: 3-bucket classification (Added, Removed, Materially Changed) with semantic shift explanations | [`backend/comparison/aligner.py`](file:///backend/comparison/aligner.py) · *Semantic Diff* |
+| **Highlighting important clauses, obligations, risks, or inconsistencies** | Hierarchical Clause Tree, 15-class taxonomy, Dangling Cross-Reference Detection, Undefined Terms Registry, Perspective Risk Scoring (0–100) | [`backend/ingestion/`](file:///backend/ingestion/) · *Structure & Risk Tabs* |
+| **Answering questions based on provided legal documents** | Grounded QA Engine with Hybrid Retrieval (BM25 + Dense + RRF) and exact PDF/DOCX page bounding box citations | [`backend/qa/engine.py`](file:///backend/qa/engine.py) · *Grounded QA Studio* |
+| **Helping users understand their options and potential next steps** | Bilateral Negotiation Alternatives: detects one-sided/aggressive terms and generates balanced counter-proposals with 1-line rationales | [`backend/actionable/negotiation.py`](file:///backend/actionable/negotiation.py) · *Actionable Hub* |
+| **Generating summaries, checklists, or other actionable outputs** | Obligations Timeline with **RFC 5545 `.ics` Calendar Export**, Executive Summary, and Document Profile Compliance | [`backend/actionable/deadlines.py`](file:///backend/actionable/deadlines.py) · *Actionable Hub* |
+| **Helping users prepare information or questions for a legal professional** | **Lawyer Consultation Preparation Pack**: automated fact digest, integrity checklist, and prioritized questions for counsel | [`backend/actionable/lawyer_prep.py`](file:///backend/actionable/lawyer_prep.py) · *Actionable Hub* |
+| **Non-Legal-Advice Informational Guardrail** | Algorithmic refusal layer and visible informational alerts when queries solicit legal advice, predictions, or lawsuit strategy | [`backend/llm/provider.py`](file:///backend/llm/provider.py) · *Grounded QA Studio* |
+
+### 3. Key Assumptions Made
+1. **Strict Informational Boundary**: ClauseLens is an analytical and educational intelligence system designed to assist human understanding, not replace licensed attorneys or provide formal legal representation.
+2. **Dual Operational Reliability**: The solution operates 100% offline using deterministic heuristics, regex parsers, and local embeddings (`all-MiniLM-L6-v2`), while dynamically boosting synthesis when Gemini API keys are supplied.
+3. **Supported Formats & Size**: Primary supported contract formats are PDF and DOCX up to a enforced 25 MB safety limit.
+4. **Perspective Asymmetry**: Legal risks are inherently asymmetric; what protects a landlord can expose a tenant. Thus, risk modeling must always allow role selection.
+
+### 4. Evaluation Focus Areas
+* **Code Quality (High Impact)**: Clean modular architecture (`ingestion`, `qa`, `comparison`, `actionable`, `llm`), strict Pydantic v2 data models, comprehensive type hints, and self-documenting code.
+* **Security (Medium Impact)**: File upload path traversal sanitization, 25MB upload hard limit, strict CORS origin controls, security response headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`), and zero secret leakage.
+* **Efficiency (Medium Impact)**: Sub-second response times, SQLite relational storage with indexed foreign keys, lightweight zero-build vanilla frontend, and a total repository footprint under 1 MB (well below the 10 MB limit).
+* **Testing (Low Impact)**: 84 passing automated test cases with pytest + 100% pass automated benchmark evaluation suite (`eval.py`).
+* **Accessibility (Low Impact)**: Full keyboard accessibility (`Esc` modal/drawer closing, skip-to-content links), semantic HTML5 tags, ARIA attributes, high-contrast dark glassmorphism palette, and responsive mobile/desktop layouts.
+
+---
+
 ## 💡 The Core Thesis & Technical Differentiator
 
 ### The Problem With Traditional Legal RAG
