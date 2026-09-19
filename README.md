@@ -80,7 +80,7 @@ ClauseLens is purpose-built for five key user personas:
 │                         │ attorney for initial    │ span citations and builds a structured       │
 │                         │ contract review         │ Lawyer Consultation Briefing Pack.           │
 ├─────────────────────────┼─────────────────────────┼──────────────────────────────────────────────┤
-│ 🌐 Non-English Speaker  │ Dense legal jargon in   │ Actionable Rewriter: translates complex      │
+│ 🌐 Non-English Speaker  │ Dense legal jargon in   │ Actionable Rewriter: translates complex     │
 │                         │ English-only agreements │ covenants into fluent Hindi & Kannada.       │
 └─────────────────────────┴─────────────────────────┴──────────────────────────────────────────────┘
 ```
