@@ -26,7 +26,8 @@ class LLMProvider(ABC):
 
 class GeminiProvider(LLMProvider):
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or GEMINI_API_KEY
+        raw_key = (api_key or GEMINI_API_KEY or "").strip()
+        self.api_key = raw_key if (raw_key and not raw_key.startswith("your_") and "placeholder" not in raw_key.lower()) else ""
         self.client = None
         if self.api_key:
             try:
@@ -62,6 +63,10 @@ class GeminiProvider(LLMProvider):
                     parsed_data = json.loads(response.text)
                     return schema.model_validate(parsed_data)
             except Exception as e:
+                err_str = str(e)
+                if "API_KEY_INVALID" in err_str or "API key not valid" in err_str or "400" in err_str:
+                    logger.info("Gemini API key invalid/expired. Falling back to deterministic offline engine.")
+                    raise RuntimeError("Gemini API key invalid; offline fallback engaged.") from e
                 logger.warning(f"Gemini API call attempt {attempt + 1} failed: {e}")
                 if attempt == 1:
                     raise RuntimeError(f"Gemini API structured generation failed after retry: {e}")

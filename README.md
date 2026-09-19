@@ -128,7 +128,7 @@ Standard legal AI pipelines treat contracts as unstructured text chunks. They sl
 
 ```bash
 # 1. Clone repository and navigate to root
-git clone https://github.com/your-username/ClauseLens.git
+git clone https://github.com/Anu5156/ClauseLens.git
 cd ClauseLens
 
 # 2. Create and activate virtual environment
