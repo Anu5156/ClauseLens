@@ -479,7 +479,7 @@ python eval.py
 
 ## 🔌 REST API Reference
 
-ClauseLens exposes 13 production endpoints via FastAPI:
+ClauseLens exposes 14 production endpoints via FastAPI:
 
 | Method | Endpoint | Description |
 | :---: | :--- | :--- |
