@@ -90,12 +90,18 @@ class TestUploadEndpoint:
 
     def test_upload_filename_path_traversal(self):
         """Path-traversal filenames must be sanitised, not crash the server."""
-        resp = client.post(
-            "/api/documents/upload",
-            files={"file": ("../../etc/passwd.pdf", b"%PDF-1", "application/pdf")},
-        )
-        # Either sanitised-and-processed (may fail on parse) or 4xx — never 5xx on traversal
-        assert resp.status_code in (200, 400, 422, 500)  # 500 only on PDF parse, not traversal
+        try:
+            resp = client.post(
+                "/api/documents/upload",
+                files={"file": ("../../etc/passwd.pdf", b"%PDF-1", "application/pdf")},
+            )
+            # Either sanitised-and-processed (may fail on parse) or 4xx — never 5xx on traversal
+            assert resp.status_code in (200, 400, 422, 500)  # 500 only on PDF parse, not traversal
+        finally:
+            from pathlib import Path
+            test_file = Path("data/uploads/passwd.pdf")
+            if test_file.exists():
+                test_file.unlink()
 
 
 # ─── QA Endpoint ─────────────────────────────────────────────────────────────
