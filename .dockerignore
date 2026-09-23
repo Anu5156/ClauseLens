@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.env
+clause_lens.db-shm
+clause_lens.db-wal
+.pytest_cache/
+tests/
