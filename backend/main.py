@@ -19,7 +19,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.config import SAMPLE_DATA_DIR, BASE_DIR, UPLOAD_DIR
+from backend.config import SAMPLE_DATA_DIR, BASE_DIR, UPLOAD_DIR, GEMINI_API_KEY
 from backend.ingestion.classifier import classify_and_profile_document, DocumentProfile
 from backend.ingestion.risk_analyzer import analyze_document_risk, DocumentRiskProfile
 from backend.models import (

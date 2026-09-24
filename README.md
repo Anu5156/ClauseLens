@@ -114,7 +114,7 @@ ClauseLens implements a multi-layer, defense-in-depth security architecture:
 | **API Key Masking** | Diagnostic endpoint (`/api/diag`) masks the `GEMINI_API_KEY` to `***XXXX` (last 4 chars only). `sys.path` removed from response to prevent internal path disclosure. | [`backend/main.py`](backend/main.py) |
 | **Restrictive CORS** | `allow_credentials=False`, methods limited to `GET, POST, OPTIONS`. Origins configurable via `ALLOWED_ORIGINS` env var (defaults to `*` for serverless preview only). | [`backend/main.py`](backend/main.py) |
 | **Parameterised SQL** | All database queries use SQLite parameterised statements (`?` placeholders). No string interpolation in SQL. | [`backend/database.py`](backend/database.py) |
-| **No Secrets in Repository** | `.env` excluded via `.gitignore`. `.env.example` contains only placeholder values. `GEMINI_API_KEY` consumed exclusively from environment variables. | [`.gitignore`](.gitignore) |
+| **No Secrets in Repository** | `.env` excluded via `.gitignore`. `.env.example` contains only placeholder values. `GEMINI_API_KEY` is read from the environment in [`backend/config.py`](backend/config.py) and explicitly imported into [`backend/main.py`](backend/main.py) — never hardcoded. | [`.gitignore`](.gitignore) |
 | **LLM Guardrail** | Hardcoded `NON_LEGAL_ADVICE_INSTRUCTION` system prompt injected on every Gemini call. Cannot be overridden by user input. | [`backend/llm/provider.py`](backend/llm/provider.py) |
 
 #### ⚡ Efficiency
@@ -574,9 +574,9 @@ ClauseLens/
 │   │   ├── engine.py            # Guardrail refusal check, extractive fallback, citations
 │   │   └── retriever.py         # Hybrid BM25 + Dense all-MiniLM-L6-v2 + RRF
 │   ├── cli.py                   # Unified command-line interface for all 7 phases
-│   ├── config.py                # System paths, model parameters, environment config
+│   ├── config.py                # System paths, model parameters, environment config (exports GEMINI_API_KEY, SAMPLE_DATA_DIR, BASE_DIR, UPLOAD_DIR)
 │   ├── database.py              # SQLite storage layer with cascading foreign keys
-│   ├── main.py                  # FastAPI server mounting API routes and Web UI
+│   ├── main.py                  # FastAPI server mounting API routes and Web UI (imports GEMINI_API_KEY from config.py for diagnostic masking)
 │   ├── models.py                # Pydantic schemas (ClauseNode, SpanLocation, etc.)
 │   ├── sample_generator.py      # Contract generator injecting deliberate defects
 │   └── seed.py                  # Phase 7: Idempotent database seeding utility
@@ -651,6 +651,13 @@ ClauseLens is pre-configured for seamless, zero-config deployment to [Vercel](ht
 - **Serverless FastAPI**: API routes (`/api/*`) execute as high-performance Python serverless functions with 60-second timeouts.
 - **Read-Only Filesystem Safe**: Automatically clones pre-seeded contracts to `/tmp/clause_lens.db` and writes uploads to `/tmp/uploads`, avoiding serverless read-only filesystem errors.
 - **Optimized Bundle Size**: Optimized dependency tree stays well below Vercel's 250MB bundle limit while maintaining full BM25 + Jaccard ranking intelligence and AI capabilities.
+
+---
+
+## 📝 Changelog
+
+### v1.0.1 — Bug Fix
+- **Fixed `NameError` in `/api/diag` endpoint**: `GEMINI_API_KEY` was referenced in [`backend/main.py`](backend/main.py) (line 135) but was not imported into the module's namespace. It is now correctly imported from [`backend/config.py`](backend/config.py) alongside the other config constants (`SAMPLE_DATA_DIR`, `BASE_DIR`, `UPLOAD_DIR`). The `/api/diag` diagnostic masking (`***XXXX`) now works as intended in all deployment environments.
 
 ---
 
