@@ -7,8 +7,7 @@ env/
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
+
 
 # Testing & Evaluation
 tests/
