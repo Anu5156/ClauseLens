@@ -9,19 +9,12 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": [
-        "backend/**",
-        "data/**",
-        "clause_lens.db"
-      ]
+      "includeFiles": "{backend/**,data/**,clause_lens.db}"
     },
     "main.py": {
       "maxDuration": 60,
-      "includeFiles": [
-        "backend/**",
-        "data/**",
-        "clause_lens.db"
-      ]
+      "includeFiles": "{backend/**,data/**,clause_lens.db}"
     }
   }
 }
+
