@@ -6,8 +6,9 @@ pydantic>=2.0.0
 # Document Ingestion & Export
 pymupdf>=1.23.0
 python-docx>=0.8.11
-reportlab>=4.0.0
+pypdf>=4.0.0
 python-multipart>=0.0.9
+
 
 # Search & Retrieval (Vercel Serverless optimized)
 # Note: BM25 + Lexical Jaccard ranking is used in serverless environments to maintain

@@ -1,23 +1,29 @@
 from __future__ import annotations
 
 import os
+import sys
 import re
 import logging
 from pathlib import Path
 from typing import Optional, List
+
+# Ensure repo root is in sys.path for serverless runtimes
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.config import SAMPLE_DATA_DIR, BASE_DIR, UPLOAD_DIR
-from backend.ingestion.pipeline import ingest_document
 from backend.ingestion.classifier import classify_and_profile_document, DocumentProfile
 from backend.ingestion.risk_analyzer import analyze_document_risk, DocumentRiskProfile
 from backend.models import (
     QARequest, QAResponse, CompareRequest, DocumentComparisonResult,
     DeadlineExport, LawyerPrepPack, RewriteRequest, RewriteResult, NegotiationProposal,
 )
+
 from backend.qa.engine import answer_question
 from backend.comparison.aligner import compare_documents
 from backend.actionable.deadlines import extract_deadlines
@@ -192,12 +198,14 @@ async def upload_document(file: UploadFile = File(...)):
     logger.info("Received upload: %s (%d bytes)", clean_filename, len(contents))
 
     try:
+        from backend.ingestion.pipeline import ingest_document
         parsed_doc, profile = ingest_document(str(temp_path))
         logger.info("Ingested document: %s → %s clauses", parsed_doc.id, len(parsed_doc.clauses))
         return {"document": parsed_doc, "profile": profile}
     except Exception as exc:  # noqa: BLE001
         logger.exception("Ingestion failed for %s", clean_filename)
         raise HTTPException(status_code=500, detail=f"Document ingestion failed: {exc}") from exc
+
 
 # ─── Static Frontend (SPA) ────────────────────────────────────────────────────
 # On Vercel, files in public/ are served directly by Vercel CDN at the platform level.
