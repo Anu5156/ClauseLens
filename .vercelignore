@@ -1,0 +1,31 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing & Evaluation
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+pytest.ini
+eval.py
+
+# Version control & local tooling
+.git/
+.gitignore
+.agents/
+.gemini/
+
+# Alternate deployment artifacts
+Dockerfile
+.dockerignore
+Procfile
+render.yaml

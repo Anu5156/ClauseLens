@@ -1,17 +1,22 @@
+# Core Framework & Server
 fastapi>=0.100.0
 uvicorn>=0.22.0
 pydantic>=2.0.0
+
+# Document Ingestion & Export
 pymupdf>=1.23.0
 python-docx>=0.8.11
 reportlab>=4.0.0
-sentence-transformers>=2.2.2
+python-multipart>=0.0.9
+
+# Search & Retrieval (Vercel Serverless optimized)
+# Note: BM25 + Lexical Jaccard ranking is used in serverless environments to maintain
+# package size under Vercel's 250MB limit. For local dense embeddings via sentence-transformers/torch,
+# see requirements-dense.txt.
 rank-bm25>=0.2.2
 numpy>=1.24.0
+
+# AI / LLM & Config
 google-genai>=0.1.0
 python-dotenv>=1.0.0
 pyyaml>=6.0
-python-multipart>=0.0.9
-
-# Dev / Testing
-pytest>=9.0.0
-httpx>=0.28.0

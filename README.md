@@ -548,16 +548,64 @@ ClauseLens/
 │   │   └── saas_terms_v2.pdf
 │   └── templates/               # Document taxonomy profiles & expected clause requirements
 │       └── document_templates.yaml
-├── frontend/                    # Executive Web Studio Application
-│   ├── app.js                   # Reactive controller (API communication & state)
-│   ├── index.html               # Semantic HTML5 dashboard layout
-│   └── style.css                # Modern obsidian dark glassmorphism design system
+├── public/                      # Static assets served directly by Vercel CDN
+│   ├── app.js                   # Client controller
+│   ├── index.html               # Main dashboard UI
+│   └── style.css                # Obsidian glassmorphic styling
+├── frontend/                    # Source web studio application
+├── api/                         # Vercel Serverless Function entrypoint
+│   └── index.py                 # ASGI handler
+├── pyproject.toml               # Vercel FastAPI configuration & entrypoint
+├── vercel.json                  # Vercel routing & function duration rules
+├── .vercelignore                # Vercel upload exclusions
 ├── eval.py                      # Automated evaluation harness (all benchmarks)
 ├── pytest.ini                   # Test configuration (-p no:cacheprovider)
-├── requirements.txt             # Pinned project dependencies
+├── requirements.txt             # Pinned production dependencies (Vercel-optimized)
+├── requirements-dense.txt       # Optional dense embeddings (sentence-transformers)
+├── requirements-dev.txt         # Dev & test dependencies
 ├── .env.example                 # Environment variables template
 └── README.md                    # Single authoritative project documentation
 ```
+
+---
+
+## 🚀 Deployment to Vercel
+
+ClauseLens is pre-configured for seamless, zero-config deployment to [Vercel](https://vercel.com/) with native FastAPI support and Edge CDN static asset delivery.
+
+### Option A: Deploy via Vercel CLI
+
+1. **Install Vercel CLI** (minimum version 48.1.8):
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Deploy to Preview / Production**:
+   ```bash
+   vercel
+   ```
+   Or for production:
+   ```bash
+   vercel --prod
+   ```
+
+3. **Set Environment Variables in Vercel**:
+   - `GEMINI_API_KEY`: *(Optional)* Your Google Gemini API key for generative risk explanations, Q&A summaries, and redlining.
+   - `ALLOWED_ORIGINS`: *(Optional)* Comma-separated list of allowed origins (defaults to `*`).
+
+### Option B: Deploy via GitHub / GitLab
+
+1. Push your repository to GitHub.
+2. In the [Vercel Dashboard](https://vercel.com/new), click **Import Project** and select your repository.
+3. Framework Preset: **Other** / Auto-detected (Vercel automatically detects `pyproject.toml` and `tool.vercel.entrypoint`).
+4. Add the `GEMINI_API_KEY` under **Environment Variables**.
+5. Click **Deploy**.
+
+### Architecture Highlights on Vercel
+- **Zero Cold-Start Frontend**: Static assets in `public/` are served globally by Vercel's Global Edge CDN.
+- **Serverless FastAPI**: API routes (`/api/*`) execute as high-performance Python serverless functions with 60-second timeouts.
+- **Read-Only Filesystem Safe**: Automatically clones pre-seeded contracts to `/tmp/clause_lens.db` and writes uploads to `/tmp/uploads`, avoiding serverless read-only filesystem errors.
+- **Optimized Bundle Size**: Optimized dependency tree stays well below Vercel's 250MB bundle limit while maintaining full BM25 + Jaccard ranking intelligence and AI capabilities.
 
 ---
 

@@ -8,7 +8,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.config import SAMPLE_DATA_DIR, BASE_DIR
+from backend.config import SAMPLE_DATA_DIR, BASE_DIR, UPLOAD_DIR
 from backend.ingestion.pipeline import ingest_document
 from backend.ingestion.classifier import classify_and_profile_document, DocumentProfile
 from backend.ingestion.risk_analyzer import analyze_document_risk, DocumentRiskProfile
@@ -41,16 +41,18 @@ app = FastAPI(
     title="ClauseLens API",
     version="1.0.0",
     description="Advanced legal document intelligence: clause extraction, risk analysis, grounded QA, and semantic diff.",
+    redirect_slashes=False,
 )
 
-# CORS: restrict to same-origin in production; override via ALLOWED_ORIGINS env var.
-_cors_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000").split(",")
+# CORS: allow configured origins, or all origins for serverless preview deployments
+_cors_env = os.getenv("ALLOWED_ORIGINS", "*")
+_cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins,
+    allow_origins=_cors_origins if _cors_origins else ["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 @app.middleware("http")
@@ -69,7 +71,15 @@ def health_check():
 
 @app.get("/api/documents")
 def get_documents():
-    return list_documents()
+    docs = list_documents()
+    if not docs:
+        try:
+            from backend.seed import seed_database
+            seed_database(verbose=False)
+            docs = list_documents()
+        except Exception as exc:
+            logger.warning("Auto-seed on first load failed: %s", exc)
+    return docs
 
 @app.get("/api/documents/{doc_id}")
 def get_document_by_id(doc_id: str):
@@ -172,7 +182,7 @@ async def upload_document(file: UploadFile = File(...)):
             detail=f"File size exceeds the {MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)} MB upload limit.",
         )
 
-    upload_dir = Path("data/uploads")
+    upload_dir = UPLOAD_DIR
     upload_dir.mkdir(parents=True, exist_ok=True)
     temp_path = upload_dir / clean_filename
 
@@ -188,6 +198,9 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Document ingestion failed: {exc}") from exc
 
 # ─── Static Frontend (SPA) ────────────────────────────────────────────────────
-frontend_dir = BASE_DIR / "frontend"
-frontend_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+# On Vercel, files in public/ are served directly by Vercel CDN at the platform level.
+# Do not mount public/ with app.mount() on Vercel. For local dev or standard servers, mount frontend/.
+if not os.getenv("VERCEL"):
+    frontend_dir = BASE_DIR / "frontend"
+    if frontend_dir.exists():
+        app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")

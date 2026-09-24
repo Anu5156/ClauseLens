@@ -98,10 +98,13 @@ class TestUploadEndpoint:
             # Either sanitised-and-processed (may fail on parse) or 4xx — never 5xx on traversal
             assert resp.status_code in (200, 400, 422, 500)  # 500 only on PDF parse, not traversal
         finally:
-            from pathlib import Path
-            test_file = Path("data/uploads/passwd.pdf")
+            from backend.config import UPLOAD_DIR
+            test_file = UPLOAD_DIR / "passwd.pdf"
             if test_file.exists():
-                test_file.unlink()
+                try:
+                    test_file.unlink()
+                except PermissionError:
+                    pass
 
 
 # ─── QA Endpoint ─────────────────────────────────────────────────────────────
