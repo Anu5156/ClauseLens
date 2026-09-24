@@ -24,15 +24,19 @@ def seed_database(verbose: bool = True):
 
     init_db()
 
-    # 1. Ensure sample documents exist
-    create_all_samples()
-
     sample_files = [
         ("residential_lease.pdf", "tenant"),
         ("employment_agreement.docx", "employee"),
         ("saas_terms.pdf", "customer"),
         ("saas_terms_v2.pdf", "customer")
     ]
+
+    # 1. Ensure sample documents exist (only generate if missing)
+    if any(not (SAMPLE_DATA_DIR / f).exists() for f, _ in sample_files):
+        try:
+            create_all_samples()
+        except Exception:
+            pass
 
     seeded_docs = []
 
