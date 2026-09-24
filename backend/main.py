@@ -3,7 +3,10 @@ from __future__ import annotations
 import os
 import sys
 import re
+import time
 import logging
+import hashlib
+import collections
 from pathlib import Path
 from typing import Optional, List
 
@@ -12,7 +15,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Response
+from fastapi import FastAPI, UploadFile, File, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -43,6 +46,9 @@ logger = logging.getLogger("clauselens.api")
 # ─── Constants ────────────────────────────────────────────────────────────────
 MAX_UPLOAD_SIZE_BYTES: int = 25 * 1024 * 1024   # 25 MB hard limit
 ALLOWED_EXTENSIONS: tuple[str, ...] = (".pdf", ".docx", ".doc")
+RATE_LIMIT_WINDOW: int = 60          # sliding window in seconds
+RATE_LIMIT_MAX_REQUESTS: int = 120   # max requests per window per IP
+DOC_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{1,128}$")  # whitelist doc IDs
 
 # ─── Application ──────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -63,13 +69,57 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ─── Rate Limiter (in-memory sliding window) ─────────────────────────────────
+_rate_store: dict[str, collections.deque] = {}
+
+
+def _check_rate_limit(client_ip: str) -> bool:
+    """Returns True if the request should be ALLOWED, False if rate-limited."""
+    now = time.monotonic()
+    window = _rate_store.setdefault(client_ip, collections.deque())
+    # Purge expired timestamps outside the sliding window
+    while window and window[0] < now - RATE_LIMIT_WINDOW:
+        window.popleft()
+    if len(window) >= RATE_LIMIT_MAX_REQUESTS:
+        return False
+    window.append(now)
+    return True
+
+
+def _validate_doc_id(doc_id: str) -> str:
+    """Validates and returns sanitized doc_id. Raises 400 on invalid input."""
+    if not DOC_ID_PATTERN.match(doc_id):
+        raise HTTPException(status_code=400, detail="Invalid document ID format.")
+    return doc_id
+
+
 @app.middleware("http")
-async def add_security_headers(request, call_next):
+async def security_middleware(request: Request, call_next):
+    # Rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    if not _check_rate_limit(client_ip):
+        return Response(
+            content='{"detail":"Rate limit exceeded. Please retry later."}',
+            status_code=429,
+            media_type="application/json",
+        )
     response = await call_next(request)
+    # Security headers (defense-in-depth)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "frame-ancestors 'none'"
+    )
+    if os.getenv("VERCEL"):
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 @app.get("/api/health")
@@ -81,12 +131,14 @@ def health_check():
 def diag_check():
     import platform
     root_items = [p.name for p in _REPO_ROOT.iterdir()] if _REPO_ROOT.exists() else []
+    # Mask sensitive keys in diagnostic output (security best practice)
+    masked_key = "***" + GEMINI_API_KEY[-4:] if len(GEMINI_API_KEY) > 4 else "(not set)"
     return {
         "status": "ok",
         "python_version": platform.python_version(),
-        "sys_path": sys.path,
         "repo_root": str(_REPO_ROOT),
         "root_items": root_items,
+        "gemini_key_status": masked_key,
     }
 
 
@@ -104,6 +156,7 @@ def get_documents():
 
 @app.get("/api/documents/{doc_id}")
 def get_document_by_id(doc_id: str):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -111,6 +164,7 @@ def get_document_by_id(doc_id: str):
 
 @app.get("/api/documents/{doc_id}/profile", response_model=DocumentProfile)
 def get_document_profile(doc_id: str):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -119,6 +173,7 @@ def get_document_profile(doc_id: str):
 
 @app.get("/api/documents/{doc_id}/risk", response_model=DocumentRiskProfile)
 def get_document_risk(doc_id: str, perspective: Optional[str] = None):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -127,6 +182,7 @@ def get_document_risk(doc_id: str, perspective: Optional[str] = None):
 
 @app.post("/api/documents/{doc_id}/qa", response_model=QAResponse)
 def ask_document_question(doc_id: str, request: QARequest):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -145,6 +201,7 @@ def compare_documents_endpoint(request: CompareRequest):
 
 @app.get("/api/documents/{doc_id}/actionable/deadlines", response_model=DeadlineExport)
 def get_document_deadlines(doc_id: str, effective_date: Optional[str] = None):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -152,18 +209,22 @@ def get_document_deadlines(doc_id: str, effective_date: Optional[str] = None):
 
 @app.get("/api/documents/{doc_id}/actionable/deadlines/ics")
 def download_deadlines_ics(doc_id: str, effective_date: Optional[str] = None):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     deadline_export = extract_deadlines(doc, effective_date_str=effective_date)
+    # Sanitize doc_id in filename to prevent header injection
+    safe_filename = re.sub(r"[^a-zA-Z0-9_.-]", "_", doc_id)
     return Response(
         content=deadline_export.ics_content,
         media_type="text/calendar",
-        headers={"Content-Disposition": f"attachment; filename={doc_id}_deadlines.ics"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}_deadlines.ics"'}
     )
 
 @app.get("/api/documents/{doc_id}/actionable/lawyer-prep", response_model=LawyerPrepPack)
 def get_document_lawyer_prep(doc_id: str):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -171,6 +232,7 @@ def get_document_lawyer_prep(doc_id: str):
 
 @app.post("/api/documents/{doc_id}/actionable/rewrite", response_model=RewriteResult)
 def rewrite_document_endpoint(doc_id: str, request: RewriteRequest):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -178,6 +240,7 @@ def rewrite_document_endpoint(doc_id: str, request: RewriteRequest):
 
 @app.get("/api/documents/{doc_id}/actionable/negotiations", response_model=List[NegotiationProposal])
 def get_negotiation_proposals(doc_id: str, perspective: Optional[str] = None):
+    doc_id = _validate_doc_id(doc_id)
     doc = get_document(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
