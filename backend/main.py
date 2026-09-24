@@ -77,6 +77,19 @@ def health_check():
     logger.info("Health check called")
     return {"status": "ok", "service": "ClauseLens Backend", "version": "1.0.0"}
 
+@app.get("/api/diag")
+def diag_check():
+    import platform
+    root_items = [p.name for p in _REPO_ROOT.iterdir()] if _REPO_ROOT.exists() else []
+    return {
+        "status": "ok",
+        "python_version": platform.python_version(),
+        "sys_path": sys.path,
+        "repo_root": str(_REPO_ROOT),
+        "root_items": root_items,
+    }
+
+
 @app.get("/api/documents")
 def get_documents():
     docs = list_documents()
