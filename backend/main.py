@@ -201,8 +201,9 @@ async def upload_document(file: UploadFile = File(...)):
 
 # ─── Static Frontend (SPA) ────────────────────────────────────────────────────
 # On Vercel, files in public/ are served directly by Vercel CDN at the platform level.
-# Do not mount public/ with app.mount() on Vercel. For local dev or standard servers, mount frontend/.
+# For local dev or standard servers, mount public/ directory.
 if not os.getenv("VERCEL"):
-    frontend_dir = BASE_DIR / "frontend"
+    frontend_dir = BASE_DIR / "public"
     if frontend_dir.exists():
         app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+
